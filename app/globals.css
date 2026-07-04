@@ -1,0 +1,156 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light dark;
+  }
+}
+
+@keyframes marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 18s linear infinite;
+}
+
+@media (max-width: 640px) {
+  .animate-marquee {
+    animation-duration: 55s;
+  }
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-dialog-in {
+  animation: dialog-in 0.15s ease-out forwards;
+}
+
+@keyframes backdrop-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.animate-backdrop-in {
+  animation: backdrop-in 0.15s ease-out forwards;
+}
+
+/* ── 3D hero card float ── */
+@keyframes float-card {
+  0%, 100% {
+    transform: translateY(0px) rotateX(6deg) rotateY(-10deg);
+    filter: drop-shadow(0 20px 32px rgba(124, 58, 237, 0.18));
+  }
+  50% {
+    transform: translateY(-16px) rotateX(4deg) rotateY(-7deg);
+    filter: drop-shadow(0 36px 48px rgba(124, 58, 237, 0.28));
+  }
+}
+
+.animate-float-card {
+  animation: float-card 7s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes float-badge {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-6px); }
+}
+
+.animate-float-badge {
+  animation: float-badge 5s ease-in-out infinite;
+}
+
+.animate-float-badge-delay {
+  animation: float-badge 5s ease-in-out 1.4s infinite;
+}
+
+/* ── 3D card hover tilt ── */
+.card-3d-wrapper {
+  perspective: 900px;
+}
+
+.card-3d {
+  transition: transform 0.45s cubic-bezier(0.23, 1, 0.32, 1),
+              box-shadow 0.45s ease,
+              background-color 0.3s ease,
+              border-color 0.3s ease;
+}
+
+.card-3d:hover {
+  transform: rotateX(-4deg) rotateY(6deg) scale(1.03);
+  box-shadow: 8px 18px 36px rgba(0, 0, 0, 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  .card-3d:hover {
+    box-shadow: 8px 18px 36px rgba(0, 0, 0, 0.45);
+  }
+}
+
+/* ── Landing entrance animations ── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.anim-delay-0   { animation-delay: 0ms; }
+.anim-delay-100 { animation-delay: 100ms; }
+.anim-delay-200 { animation-delay: 200ms; }
+.anim-delay-300 { animation-delay: 300ms; }
+.anim-delay-400 { animation-delay: 400ms; }
+.anim-delay-500 { animation-delay: 500ms; }
+
+/* ── Marquee (social proof strip) ── */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 40s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-slow {
+  animation: marquee 58s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-reverse {
+  animation: marquee 48s linear infinite reverse;
+  will-change: transform;
+}
+
+@media (max-width: 640px) {
+  .animate-marquee         { animation-duration: 18s; }
+  .animate-marquee-slow    { animation-duration: 26s; }
+  .animate-marquee-reverse { animation-duration: 22s; }
+}
+
+/* ── not-found page ── */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}

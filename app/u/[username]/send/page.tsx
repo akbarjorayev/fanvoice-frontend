@@ -1,16 +1,15 @@
-import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, BadgeCheck, Coins, Sparkles } from 'lucide-react'
+import { ArrowLeft, BadgeCheck } from 'lucide-react'
 import { getPublicProfile, getMeServer } from '@/lib/api.server'
+import { AppHeader, navBtnClass } from '@/components/ui/AppHeader'
 import { SendMessageForm } from './SendMessageForm'
+import { Avatar } from '@/components/ui/Avatar'
+import { CreatorBadge, MinPricePill } from '@/components/ui/UserBadges'
+import { getUserInfoOrNull } from '@/lib/user'
 
 interface Props {
   params: Promise<{ username: string }>
-}
-
-function formatPrice(n: number) {
-  return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
 }
 
 export default async function SendMessagePage({ params }: Props) {
@@ -27,7 +26,6 @@ export default async function SendMessagePage({ params }: Props) {
   const minPrice = user.creator_min_price ?? 0
   const isSelf = meResult?.user.username === user.username
   const isVerified = !!user.creator_verified_at
-  const initial = displayName.charAt(0).toUpperCase()
 
   if (isSelf) {
     return (
@@ -52,18 +50,14 @@ export default async function SendMessagePage({ params }: Props) {
     )
   }
 
+  const meUserInfo = getUserInfoOrNull(meResult?.user)
+
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950">
-      {/* Top bar */}
-      <div className="border-b border-gray-100 dark:border-gray-800/60 px-4 sm:px-6 h-14 flex items-center">
-        <Link
-          href={`/u/${username}`}
-          className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
-        >
-          <ArrowLeft size={14} />
-          Back to profile
-        </Link>
-      </div>
+      <AppHeader
+        left={<Link href={`/u/${username}`} className={navBtnClass}><ArrowLeft size={14} />Back to profile</Link>}
+        user={meUserInfo}
+      />
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 md:py-14">
         <div className="grid md:grid-cols-[280px_1fr] gap-8 md:gap-14 lg:gap-24">
@@ -73,20 +67,14 @@ export default async function SendMessagePage({ params }: Props) {
 
             {/* Mobile: horizontal row — Desktop: vertical stack */}
             <div className="flex md:block items-center gap-4">
-              {/* Avatar */}
-              {user.avatar_url ? (
-                <Image
-                  src={user.avatar_url}
-                  alt={displayName}
-                  width={72}
-                  height={72}
-                  className="rounded-full object-cover shrink-0 w-14 h-14 md:w-[72px] md:h-[72px] md:mb-5"
-                />
-              ) : (
-                <div className="w-14 h-14 md:w-[72px] md:h-[72px] rounded-full bg-gradient-to-br from-white via-violet-400 to-blue-500 flex items-center justify-center shrink-0 md:mb-5">
-                  <span className="text-xl md:text-2xl font-bold text-white">{initial}</span>
-                </div>
-              )}
+              <Avatar
+                name={displayName}
+                avatarUrl={user.avatar_url}
+                size={72}
+                sizeClassName="w-14 h-14 md:w-[72px] md:h-[72px]"
+                className="md:mb-5"
+                textClassName="text-xl md:text-2xl font-bold"
+              />
 
               {/* Name block */}
               <div className="min-w-0">
@@ -97,20 +85,14 @@ export default async function SendMessagePage({ params }: Props) {
                   {isVerified && (
                     <BadgeCheck size={16} className="text-blue-500 shrink-0" />
                   )}
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-100 dark:bg-violet-900/40 text-xs font-semibold text-violet-600 dark:text-violet-400 shrink-0">
-                    <Sparkles size={10} />
-                    Creator
-                  </span>
+                  <CreatorBadge />
                 </div>
                 <p className="text-sm text-gray-400 mt-0.5">@{user.username}</p>
 
                 {/* Mobile-only min price */}
                 {minPrice > 0 && (
                   <div className="flex md:hidden mt-2">
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20">
-                      <Coins size={13} className="text-yellow-500 dark:text-yellow-400 shrink-0" />
-                      <span className="text-xs font-semibold text-yellow-700 dark:text-yellow-400">From {formatPrice(minPrice)} so&apos;m</span>
-                    </div>
+                    <MinPricePill price={minPrice} />
                   </div>
                 )}
               </div>
@@ -125,10 +107,7 @@ export default async function SendMessagePage({ params }: Props) {
 
             {minPrice > 0 && (
               <div className="hidden md:block mt-6">
-                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20">
-                  <Coins size={13} className="text-yellow-500 dark:text-yellow-400 shrink-0" />
-                  <span className="text-xs font-semibold text-yellow-700 dark:text-yellow-400">From {formatPrice(minPrice)} so&apos;m per message</span>
-                </div>
+                <MinPricePill price={minPrice} suffix="per message" />
               </div>
             )}
 

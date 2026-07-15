@@ -4,6 +4,7 @@ import { BadgeCheck } from 'lucide-react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTelegram } from '@fortawesome/free-brands-svg-icons'
 import { Dialog } from '@/components/ui/Dialog'
+import { SUPPORT_TELEGRAM_URL } from '@/lib/constants'
 
 interface Props {
   open: boolean
@@ -26,7 +27,7 @@ export function GetVerifiedDialog({ open, onClose }: Props) {
           </p>
         </div>
         <a
-          href="https://t.me/fanvoice_support_bot"
+          href={SUPPORT_TELEGRAM_URL}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-center gap-2 w-full py-2.5 rounded-full bg-[#2AABEE] hover:bg-[#1d9bd8] text-white text-sm font-semibold transition-colors"

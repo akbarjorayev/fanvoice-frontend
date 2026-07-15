@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Mic, X, CheckCircle2, AlertCircle } from 'lucide-react'
 import { Dialog } from '@/components/ui/Dialog'
 import { markMessageRead } from '@/lib/api'
+import { SUPPORT_TELEGRAM_URL } from '@/lib/constants'
 
 const LANGS = [
   { code: 'uz-UZ', label: "O'zbek" },
@@ -235,15 +236,13 @@ export function ReadAloud({ messageId, messageText }: Props) {
   // ─── Idle + dialogs ────────────────────────────────────────────────────────
   return (
     <>
-      {step === 'idle' && (
-        <button
-          onClick={openLangPicker}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition-colors"
-        >
-          <Mic size={14} />
-          Read aloud
-        </button>
-      )}
+      <button
+        onClick={openLangPicker}
+        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition-colors"
+      >
+        <Mic size={14} />
+        Read aloud
+      </button>
 
       {/* Step 1 — Language picker */}
       <Dialog
@@ -288,7 +287,7 @@ export function ReadAloud({ messageId, messageText }: Props) {
           <p className="text-xs text-gray-400 dark:text-gray-500">
             Don&apos;t see your language?{' '}
             <a
-              href="https://t.me/fanvoice_support_bot"
+              href={SUPPORT_TELEGRAM_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="text-violet-600 dark:text-violet-400 hover:underline"

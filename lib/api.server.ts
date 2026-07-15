@@ -1,6 +1,6 @@
 import 'server-only'
 import { cookies } from 'next/headers'
-import { API_URL } from './constants'
+import { API_URL, API_PATH_ME, API_PATH_PROFILE, API_PATH_SOCIAL_LINKS, PAGE_SIZE } from './constants'
 import type { User } from '@/types/user'
 import type { SocialLink } from '@/types/social-link'
 import type { SentMessage, ReceivedMessage, MessageDetail } from '@/types/message'
@@ -30,15 +30,15 @@ async function serverFetch<T>(path: string, init: RequestInit = {}): Promise<T> 
 }
 
 export function getMeServer() {
-  return serverFetch<{ user: User }>('/auth/me')
+  return serverFetch<{ user: User }>(API_PATH_ME)
 }
 
 export function getProfileServer() {
-  return serverFetch<{ user: User }>('/profile')
+  return serverFetch<{ user: User }>(API_PATH_PROFILE)
 }
 
 export function getSocialLinksServer() {
-  return serverFetch<{ links: SocialLink[] }>('/profile/social-links')
+  return serverFetch<{ links: SocialLink[] }>(API_PATH_SOCIAL_LINKS)
 }
 
 export interface PublicUser {
@@ -54,19 +54,19 @@ export interface PublicUser {
   creator_verified_at?: string | null
 }
 
-export function getSentMessages(page = 1, limit = 10, read: 'all' | 'read' | 'unread' = 'all', pay: 'all' | 'paid' | 'unpaid' = 'all') {
+export function getSentMessages(page = 1, limit = PAGE_SIZE, read: 'all' | 'read' | 'unread' = 'all', pay: 'all' | 'paid' | 'unpaid' = 'all') {
   const params = new URLSearchParams({ page: String(page), limit: String(limit) })
   if (read !== 'all') params.set('read', read)
   if (pay !== 'all') params.set('pay', pay)
   return serverFetch<{ messages: SentMessage[]; total: number }>(`/messages/sent?${params.toString()}`)
 }
 
-export function getReceivedMessages(page = 1, limit = 10, sort: 'date' | 'money' = 'date') {
+export function getReceivedMessages(page = 1, limit = PAGE_SIZE, sort: 'date' | 'money' = 'date') {
   return serverFetch<{ messages: ReceivedMessage[]; total: number }>(`/messages/received?page=${page}&limit=${limit}&sort=${sort}`)
 }
 
 export function getMessageCounts() {
-  return serverFetch<{ sent: number; received: number; unread_received: number }>('/messages/counts')
+  return serverFetch<{ sent: number; received: number; unread_received: number; total_earned: number }>('/messages/counts')
 }
 
 export function getMessage(id: string) {

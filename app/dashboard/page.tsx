@@ -1,8 +1,11 @@
 import { redirect } from 'next/navigation'
-import { Send, Inbox, Bell } from 'lucide-react'
+import { Send, Inbox, Bell, Coins, Banknote } from 'lucide-react'
 import { getMeServer, getProfileServer, getSentMessages, getReceivedMessages, getMessageCounts } from '@/lib/api.server'
-import { AvatarMenu } from '@/components/dashboard/AvatarMenu'
+import { AppHeader } from '@/components/ui/AppHeader'
 import { MessageTabs } from '@/components/dashboard/MessageTabs'
+import { formatPrice } from '@/lib/fees'
+import { getUserInfo } from '@/lib/user'
+import { PAGE_SIZE } from '@/lib/constants'
 
 interface Props {
   searchParams: Promise<{ tab?: string; page?: string; sort?: string; read?: string; pay?: string }>
@@ -20,8 +23,8 @@ export default async function DashboardPage({ searchParams }: Props) {
   if (!result) redirect('/login?expired=1')
 
   const { user } = result
-  const displayName = user.display_name ?? user.email.split('@')[0]
-  const initial = displayName.charAt(0).toUpperCase()
+  const userInfo = getUserInfo(user)
+  const displayName = userInfo.displayName
 
   const params = await searchParams
   const tab = params.tab === 'received' ? 'received' : 'sent'
@@ -32,7 +35,7 @@ export default async function DashboardPage({ searchParams }: Props) {
 
   const [profileResult, messagesResult, countsResult] = await Promise.allSettled([
     getProfileServer(),
-    tab === 'sent' ? getSentMessages(page, 10, read, pay) : getReceivedMessages(page, 10, sort),
+    tab === 'sent' ? getSentMessages(page, PAGE_SIZE, read, pay) : getReceivedMessages(page, PAGE_SIZE, sort),
     getMessageCounts(),
   ])
 
@@ -41,19 +44,16 @@ export default async function DashboardPage({ searchParams }: Props) {
   const total = messagesResult.status === 'fulfilled' ? messagesResult.value.total : 0
   const counts = countsResult.status === 'fulfilled'
     ? countsResult.value
-    : { sent: 0, received: 0, unread_received: 0 }
+    : { sent: 0, received: 0, unread_received: 0, total_earned: 0 }
 
-  const totalPages = Math.ceil(total / 10)
+  const totalPages = Math.ceil(total / PAGE_SIZE)
   if (totalPages > 0 && page > totalPages) {
     redirect(`/dashboard?tab=${tab}&page=${totalPages}&sort=${sort}`)
   }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <header className="sticky top-0 z-10 h-14 px-4 sm:px-6 flex items-center justify-between bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-100 dark:border-gray-800">
-        <span className="font-bold text-gray-900 dark:text-white tracking-tight">FanVoice</span>
-        <AvatarMenu displayName={displayName} initial={initial} avatarUrl={user.avatar_url} />
-      </header>
+      <AppHeader user={userInfo} />
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
         {/* Greeting + stats */}
@@ -90,6 +90,24 @@ export default async function DashboardPage({ searchParams }: Props) {
               </>
             )}
           </div>
+
+          {isCreator && counts.total_earned > 0 && (
+            <div className="relative mt-4 overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-emerald-600 dark:to-teal-800 px-6 py-6 shadow-lg shadow-emerald-500/20 dark:shadow-emerald-900/30">
+              <Banknote
+                size={160}
+                strokeWidth={1.1}
+                className="absolute -bottom-8 -right-8 text-white/10 rotate-[-15deg] pointer-events-none select-none"
+              />
+              <div className="relative flex items-center gap-1.5 text-xs font-bold text-emerald-50/80 uppercase tracking-widest mb-2">
+                <Coins size={13} className="shrink-0" />
+                Total earned
+              </div>
+              <p className="relative text-4xl sm:text-5xl font-extrabold text-white tracking-tight">
+                {formatPrice(counts.total_earned)}
+                <span className="text-lg sm:text-xl font-semibold text-emerald-50/70 ml-2">so&apos;m</span>
+              </p>
+            </div>
+          )}
         </div>
 
         <MessageTabs

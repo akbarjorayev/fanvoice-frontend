@@ -6,6 +6,7 @@ import { Send, Coins } from 'lucide-react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircleNotch } from '@fortawesome/free-solid-svg-icons'
 import { sendMessage } from '@/lib/api'
+import { formatPrice, PLATFORM_MIN_PRICE, PRICE_STEP, CREATOR_MAX_PRICE } from '@/lib/fees'
 
 interface Props {
   creatorId: string
@@ -17,11 +18,9 @@ interface Props {
 const inputBase =
   'w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-violet-500/60 focus:border-transparent transition-all'
 
-const PLATFORM_MIN = 10_000
-
 export function SendMessageForm({ creatorId, creatorName, creatorUsername, minPrice }: Props) {
-  const effectiveMin = Math.max(PLATFORM_MIN, minPrice)
-  const effectiveMinThousands = effectiveMin / 1000
+  const effectiveMin = Math.max(PLATFORM_MIN_PRICE, minPrice)
+  const effectiveMinThousands = effectiveMin / PRICE_STEP
 
   const [title, setTitle] = useState('')
   const [message, setMessage] = useState('')
@@ -30,14 +29,20 @@ export function SendMessageForm({ creatorId, creatorName, creatorUsername, minPr
   const [errorMsg, setErrorMsg] = useState('')
   const [messageId, setMessageId] = useState<string | null>(null)
 
-  const effectiveMinFormatted = `${String(effectiveMin).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} so'm`
+  const effectiveMinFormatted = `${formatPrice(effectiveMin)} so'm`
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const priceActual = priceThousands === '' ? 0 : (parseInt(priceThousands, 10) || 0) * 1000
+    const priceActual = priceThousands === '' ? 0 : (parseInt(priceThousands, 10) || 0) * PRICE_STEP
 
     if (priceActual < effectiveMin) {
       setErrorMsg(`Price must be at least ${effectiveMinFormatted}`)
+      setStatus('error')
+      return
+    }
+
+    if (priceActual > CREATOR_MAX_PRICE) {
+      setErrorMsg(`Price cannot exceed ${formatPrice(CREATOR_MAX_PRICE)} so'm`)
       setStatus('error')
       return
     }
@@ -60,8 +65,8 @@ export function SendMessageForm({ creatorId, creatorName, creatorUsername, minPr
   }
 
   if (status === 'success' && messageId) {
-    const priceActual = priceThousands === '' ? 0 : (parseInt(priceThousands, 10) || 0) * 1000
-    const priceFormatted = String(priceActual).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+    const priceActual = priceThousands === '' ? 0 : (parseInt(priceThousands, 10) || 0) * PRICE_STEP
+    const priceFormatted = formatPrice(priceActual)
 
     return (
       <div className="flex flex-col gap-6 py-4">
@@ -127,6 +132,7 @@ export function SendMessageForm({ creatorId, creatorName, creatorUsername, minPr
           required
           className={`${inputBase} h-12 px-5 rounded-full text-sm`}
         />
+        <p className="text-xs text-gray-400 dark:text-gray-600 text-right">{title.length} / 100</p>
       </div>
 
       {/* Message */}
@@ -156,6 +162,7 @@ export function SendMessageForm({ creatorId, creatorName, creatorUsername, minPr
             id="msg-price"
             type="number"
             min={effectiveMinThousands}
+            max={CREATOR_MAX_PRICE / PRICE_STEP}
             value={priceThousands}
             onChange={(e) => setPriceThousands(e.target.value.replace(/\D/g, ''))}
             placeholder={String(effectiveMinThousands)}

@@ -5,8 +5,9 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Inbox, Send, Sparkles, ChevronLeft, ChevronRight, Coins, Clock } from 'lucide-react'
 import type { SentMessage, ReceivedMessage } from '@/types/message'
-
-const PER_PAGE = 10
+import { creatorAmount, formatPrice } from '@/lib/fees'
+import { Avatar } from '@/components/ui/Avatar'
+import { PAGE_SIZE } from '@/lib/constants'
 
 interface Props {
   tab: 'sent' | 'received'
@@ -22,52 +23,64 @@ interface Props {
   unreadReceived: number
 }
 
-function parseDate(dateStr: string): Date {
-  // DB returns bare timestamps without timezone — append Z to force UTC parsing
-  const normalized = dateStr.includes('Z') || dateStr.includes('+')
-    ? dateStr
-    : dateStr.replace(' ', 'T') + 'Z'
-  return new Date(normalized)
+function formatMessageDate(dateStr: string): string {
+  const date = new Date(dateStr)
+  const now = new Date()
+  const dateDay = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const diffDays = Math.round((today.getTime() - dateDay.getTime()) / 86400000)
+  if (diffDays === 0) return 'Today'
+  if (diffDays === 1) return 'Yesterday'
+  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(date)
 }
 
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - parseDate(dateStr).getTime()
-  const mins = Math.floor(diff / 60000)
-  if (mins < 1) return 'just now'
-  if (mins < 60) return `${mins}m ago`
-  const hours = Math.floor(mins / 60)
-  if (hours < 24) return `${hours}h ago`
-  const days = Math.floor(hours / 24)
-  if (days < 7) return `${days}d ago`
-  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(parseDate(dateStr))
+function pageNumbers(current: number, total: number): (number | '...')[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+  const show = new Set([1, total, current - 1, current, current + 1].filter(p => p >= 1 && p <= total))
+  const sorted = Array.from(show).sort((a, b) => a - b)
+  const result: (number | '...')[] = []
+  for (let i = 0; i < sorted.length; i++) {
+    if (i > 0 && sorted[i] - sorted[i - 1] > 1) result.push('...')
+    result.push(sorted[i])
+  }
+  return result
 }
 
-function formatPrice(n: number): string {
-  return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
-}
-
-const GRADIENTS = [
-  'from-violet-400 to-purple-600',
-  'from-blue-400 to-cyan-500',
-  'from-emerald-400 to-teal-600',
-  'from-amber-400 to-orange-500',
-  'from-pink-400 to-rose-500',
-  'from-indigo-400 to-blue-600',
-  'from-teal-400 to-green-600',
-  'from-red-400 to-pink-600',
-]
-
-function avatarGradient(name: string) {
-  return GRADIENTS[name.toLowerCase().charCodeAt(0) % GRADIENTS.length]
-}
-
-function AvatarInitial({ name }: { name: string }) {
+function StatusPills({
+  message,
+  isPaid,
+  nowrap,
+}: {
+  message: SentMessage | ReceivedMessage
+  isPaid: boolean
+  nowrap?: boolean
+}) {
+  const nw = nowrap ? ' whitespace-nowrap' : ''
   return (
-    <div
-      className={`w-10 h-10 rounded-full bg-gradient-to-br ${avatarGradient(name)} flex items-center justify-center shrink-0 text-white font-bold text-sm select-none`}
-    >
-      {name.charAt(0).toUpperCase()}
-    </div>
+    <>
+      {message.read_at ? (
+        <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400${nw}`}>
+          <span className="w-1 h-1 rounded-full bg-blue-500" />
+          Read
+        </span>
+      ) : (
+        <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400${nw}`}>
+          <span className="w-1 h-1 rounded-full bg-gray-400" />
+          Unread
+        </span>
+      )}
+      {isPaid ? (
+        <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400${nw}`}>
+          <span className="w-1 h-1 rounded-full bg-green-500" />
+          Paid
+        </span>
+      ) : (
+        <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400${nw}`}>
+          <Clock size={9} />
+          Unpaid
+        </span>
+      )}
+    </>
   )
 }
 
@@ -129,7 +142,7 @@ export function MessageTabs({
   unreadReceived,
 }: Props) {
   const router = useRouter()
-  const totalPages = Math.ceil(total / PER_PAGE)
+  const totalPages = Math.ceil(total / PAGE_SIZE)
 
   const sentBtnRef = useRef<HTMLButtonElement>(null)
   const receivedBtnRef = useRef<HTMLButtonElement>(null)
@@ -295,8 +308,13 @@ export function MessageTabs({
                 tab === 'sent'
                   ? (msg as SentMessage).creator_username
                   : (msg as ReceivedMessage).fan_username
+              const avatarUrl =
+                tab === 'sent'
+                  ? (msg as SentMessage).creator_avatar_url
+                  : (msg as ReceivedMessage).fan_avatar_url
               const isUnread = tab === 'received' && msg.read_at === null
               const isPaid = tab === 'sent' ? (msg as SentMessage).paid_at !== null : true
+              const displayPrice = tab === 'received' ? creatorAmount(msg.price) : msg.price
 
               return (
                 <div
@@ -304,9 +322,10 @@ export function MessageTabs({
                   onClick={() => router.push(`/message/${msg.id}`)}
                   className="flex items-start gap-3 px-4 py-4 hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors cursor-pointer"
                 >
-                  <AvatarInitial name={name} />
+                  <Avatar name={name} avatarUrl={avatarUrl} size={40} variant="hashed" textClassName="font-bold text-sm select-none" />
 
                   <div className="flex-1 min-w-0">
+                    {/* Row 1: name + time */}
                     <div className="flex items-center justify-between gap-2 mb-0.5">
                       <div className="flex items-center gap-1.5 min-w-0">
                         <span className="text-xs font-medium text-gray-500 dark:text-gray-400 truncate">
@@ -320,10 +339,11 @@ export function MessageTabs({
                         )}
                       </div>
                       <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0 whitespace-nowrap">
-                        {timeAgo(msg.created_at)}
+                        {formatMessageDate(msg.created_at)}
                       </span>
                     </div>
 
+                    {/* Row 2: title + badges (desktop) / title only (mobile) */}
                     <div className="flex items-center justify-between gap-2">
                       <p
                         className={`text-base truncate ${
@@ -334,38 +354,22 @@ export function MessageTabs({
                       >
                         {msg.title}
                       </p>
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="hidden sm:flex items-center gap-2 shrink-0">
                         <span className="flex items-center gap-1 text-xs font-semibold text-amber-600 dark:text-amber-400 whitespace-nowrap">
                           <Coins size={11} />
-                          {formatPrice(msg.price)}
+                          {formatPrice(displayPrice)}
                         </span>
-                        {tab === 'sent' && (
-                          <>
-                            {msg.read_at ? (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 whitespace-nowrap">
-                                <span className="w-1 h-1 rounded-full bg-blue-500" />
-                                Read
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                                <span className="w-1 h-1 rounded-full bg-gray-400" />
-                                Unread
-                              </span>
-                            )}
-                            {isPaid ? (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 whitespace-nowrap">
-                                <span className="w-1 h-1 rounded-full bg-green-500" />
-                                Paid
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 whitespace-nowrap">
-                                <Clock size={9} />
-                                Unpaid
-                              </span>
-                            )}
-                          </>
-                        )}
+                        {tab === 'sent' && <StatusPills message={msg} isPaid={isPaid} nowrap />}
                       </div>
+                    </div>
+
+                    {/* Row 3: badges on mobile only */}
+                    <div className="flex items-center gap-1.5 mt-1 sm:hidden">
+                      <span className="flex items-center gap-1 text-xs font-semibold text-amber-600 dark:text-amber-400">
+                        <Coins size={10} />
+                        {formatPrice(msg.price)}
+                      </span>
+                      {tab === 'sent' && <StatusPills message={msg} isPaid={isPaid} />}
                     </div>
                   </div>
                 </div>
@@ -386,19 +390,23 @@ export function MessageTabs({
                 >
                   <ChevronLeft size={14} />
                 </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => navigate(tab, p)}
-                    className={`w-7 h-7 rounded-full text-xs font-medium transition-colors ${
-                      p === page
-                        ? 'bg-violet-600 text-white'
-                        : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
-                    }`}
-                  >
-                    {p}
-                  </button>
-                ))}
+                {pageNumbers(page, totalPages).map((p, i) =>
+                  p === '...'
+                    ? <span key={`ellipsis-${i}`} className="w-7 text-center text-xs text-gray-400 dark:text-gray-600">…</span>
+                    : (
+                      <button
+                        key={p}
+                        onClick={() => navigate(tab, p)}
+                        className={`w-7 h-7 rounded-full text-xs font-medium transition-colors ${
+                          p === page
+                            ? 'bg-violet-600 text-white'
+                            : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    )
+                )}
                 <button
                   onClick={() => navigate(tab, page + 1)}
                   disabled={page === totalPages}

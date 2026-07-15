@@ -1,4 +1,4 @@
-import { API_URL } from './constants'
+import { API_URL, API_PATH_ME, API_PATH_PROFILE, API_PATH_SOCIAL_LINKS } from './constants'
 import type { User } from '@/types/user'
 import type { SocialLink } from '@/types/social-link'
 
@@ -56,7 +56,7 @@ export function googleSignIn(code: string) {
 }
 
 export function getMe() {
-  return apiFetch<{ user: User }>('/auth/me')
+  return apiFetch<{ user: User }>(API_PATH_ME)
 }
 
 export function logout() {
@@ -64,14 +64,14 @@ export function logout() {
 }
 
 export function updateProfile(data: { display_name?: string; username?: string }) {
-  return apiFetch<{ user: User }>('/profile', {
+  return apiFetch<{ user: User }>(API_PATH_PROFILE, {
     method: 'PATCH',
     body: JSON.stringify(data),
   })
 }
 
 export function getSocialLinks() {
-  return apiFetch<{ links: SocialLink[] }>('/profile/social-links')
+  return apiFetch<{ links: SocialLink[] }>(API_PATH_SOCIAL_LINKS)
 }
 
 export function upsertSocialLink(platform: string, url: string) {

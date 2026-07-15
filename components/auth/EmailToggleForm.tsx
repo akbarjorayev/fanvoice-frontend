@@ -15,9 +15,13 @@ import { emailSignIn, emailSignUp } from '@/lib/api'
 
 interface Props {
   mode: 'signin' | 'signup'
+  disabled?: boolean
+  forceClose?: boolean
+  onLoadingChange?: (loading: boolean) => void
+  onSuccess?: () => void
 }
 
-export function EmailToggleForm({ mode }: Props) {
+export function EmailToggleForm({ mode, disabled, forceClose, onLoadingChange, onSuccess }: Props) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [email, setEmail] = useState('')
@@ -34,6 +38,10 @@ export function EmailToggleForm({ mode }: Props) {
     }
   }, [open])
 
+  useEffect(() => {
+    if (forceClose) setOpen(false)
+  }, [forceClose])
+
   function handleForgotPassword() {
     toast.info('Coming soon! 😅 Still working on this.')
   }
@@ -45,16 +53,19 @@ export function EmailToggleForm({ mode }: Props) {
       return
     }
     setLoading(true)
+    onLoadingChange?.(true)
     try {
       if (mode === 'signup') {
         await emailSignUp(email, password)
       } else {
         await emailSignIn(email, password)
       }
+      onSuccess?.()
       router.push('/dashboard')
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Something went wrong')
       setLoading(false)
+      onLoadingChange?.(false)
     }
   }
 
@@ -67,7 +78,8 @@ export function EmailToggleForm({ mode }: Props) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-center gap-2.5 h-12 px-5 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-white/[0.06] hover:bg-gray-50 dark:hover:bg-white/[0.10] text-sm font-medium text-gray-600 dark:text-gray-300 transition-all shadow-sm"
+        disabled={disabled}
+        className="w-full flex items-center justify-center gap-2.5 h-12 px-5 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-white/[0.06] hover:bg-gray-50 dark:hover:bg-white/[0.10] text-sm font-medium text-gray-600 dark:text-gray-300 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <FontAwesomeIcon
           icon={faEnvelope}

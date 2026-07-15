@@ -1,22 +1,29 @@
+'use client'
+
 import Link from 'next/link'
+import Image from 'next/image'
+import { usePathname } from 'next/navigation'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTelegram } from '@fortawesome/free-brands-svg-icons'
+import { SUPPORT_TELEGRAM_URL } from '@/lib/constants'
 
-const links = [
-  { label: 'How it works', href: '#how-it-works' },
+const baseLinks = [
   { label: 'For Creators', href: '/signup' },
   { label: 'Terms', href: '/terms' },
   { label: 'Privacy', href: '/privacy' },
 ]
 
 export function Footer() {
+  const pathname = usePathname()
+  const links = pathname === '/'
+    ? [{ label: 'How it works', href: '#how-it-works' }, ...baseLinks]
+    : baseLinks
+
   return (
     <footer className="bg-gray-50 dark:bg-gray-950 border-t border-gray-200 dark:border-white/[0.06] py-10 px-6">
       <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-        <Link href="/" className="flex items-center gap-2.5 shrink-0">
-          <span className="w-6 h-6 rounded-md bg-violet-600 flex items-center justify-center text-white font-black text-xs shadow-lg shadow-violet-600/20">
-            F
-          </span>
+        <Link href="/" className="flex items-center gap-2 shrink-0">
+          <Image src="/fanvoice-logo.png" alt="FanVoice" width={24} height={24} className="rounded-md" />
           <span className="text-gray-900 dark:text-white font-bold tracking-tight">FanVoice</span>
         </Link>
 
@@ -31,7 +38,7 @@ export function Footer() {
             </Link>
           ))}
           <a
-            href="https://t.me/fanvoice_support_bot"
+            href={SUPPORT_TELEGRAM_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 text-gray-500 text-sm hover:text-sky-500 dark:hover:text-sky-400 transition-colors"

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { User, AtSign, Check } from 'lucide-react'
 import { toast } from 'sonner'
@@ -8,16 +8,26 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircleNotch } from '@fortawesome/free-solid-svg-icons'
 import { Dialog } from '@/components/ui/Dialog'
 import { updateProfile, updateCreator } from '@/lib/api'
+import { formatPrice, PRICE_STEP, CREATOR_MAX_PRICE } from '@/lib/fees'
 import type { User as UserType } from '@/types/user'
 
 interface Props {
   open: boolean
   onClose: () => void
   user: UserType
+  focusPrice?: boolean
 }
 
-export function EditProfileDialog({ open, onClose, user }: Props) {
+export function EditProfileDialog({ open, onClose, user, focusPrice }: Props) {
   const router = useRouter()
+  const priceRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (open && focusPrice) {
+      const t = setTimeout(() => priceRef.current?.focus(), 180)
+      return () => clearTimeout(t)
+    }
+  }, [open, focusPrice])
   const displayNameInit = user.display_name ?? ''
   const usernameInit = user.username ?? ''
   const bioInit = user.creator_bio ?? ''
@@ -26,14 +36,14 @@ export function EditProfileDialog({ open, onClose, user }: Props) {
   const [displayName, setDisplayName] = useState(displayNameInit)
   const [username, setUsername] = useState(usernameInit)
   const [bio, setBio] = useState(bioInit)
-  const [priceThousands, setPriceThousands] = useState(priceInit > 0 ? String(priceInit / 1000) : '')
+  const [priceThousands, setPriceThousands] = useState(priceInit > 0 ? String(priceInit / PRICE_STEP) : '')
   const [saving, setSaving] = useState(false)
 
   const profileDirty =
     displayName.trim() !== displayNameInit ||
     username.trim() !== usernameInit
   const bioDirty = user.is_creator && bio.trim() !== bioInit
-  const priceDirty = user.is_creator && priceThousands !== (priceInit > 0 ? String(priceInit / 1000) : '')
+  const priceDirty = user.is_creator && priceThousands !== (priceInit > 0 ? String(priceInit / PRICE_STEP) : '')
   const isDirty = profileDirty || bioDirty || priceDirty
 
   async function handleSubmit(e: React.FormEvent) {
@@ -62,7 +72,7 @@ export function EditProfileDialog({ open, onClose, user }: Props) {
     try {
       const tasks: Promise<unknown>[] = []
       const n = parseInt(priceThousands, 10)
-      const actual = priceThousands === '' ? 0 : (isNaN(n) ? 0 : n * 1000)
+      const actual = priceThousands === '' ? 0 : (isNaN(n) ? 0 : n * PRICE_STEP)
 
       if (profileDirty) {
         const patch: { display_name?: string; username?: string } = {}
@@ -80,6 +90,7 @@ export function EditProfileDialog({ open, onClose, user }: Props) {
 
       await Promise.all(tasks)
       toast.success('Profile saved!')
+      setSaving(false)
       router.refresh()
       onClose()
     } catch (err) {
@@ -92,7 +103,7 @@ export function EditProfileDialog({ open, onClose, user }: Props) {
     setDisplayName(displayNameInit)
     setUsername(usernameInit)
     setBio(bioInit)
-    setPriceThousands(priceInit > 0 ? String(priceInit / 1000) : '')
+    setPriceThousands(priceInit > 0 ? String(priceInit / PRICE_STEP) : '')
     onClose()
   }
 
@@ -169,14 +180,15 @@ export function EditProfileDialog({ open, onClose, user }: Props) {
               <div className="flex items-center gap-2">
               <div className="flex items-stretch rounded-full border border-gray-200 dark:border-gray-700 overflow-hidden bg-gray-50 dark:bg-gray-800 w-fit focus-within:ring-2 focus-within:ring-violet-500 focus-within:border-transparent transition">
                 <input
+                  ref={priceRef}
                   id="ep-price"
                   type="number"
                   min={1}
-                  max={1000}
+                  max={CREATOR_MAX_PRICE / PRICE_STEP}
                   value={priceThousands}
                   onChange={e => {
                     const val = e.target.value.replace(/\D/g, '')
-                    if (val === '' || parseInt(val, 10) <= 1000) setPriceThousands(val)
+                    if (val === '' || parseInt(val, 10) <= CREATOR_MAX_PRICE / PRICE_STEP) setPriceThousands(val)
                   }}
                   placeholder="50"
                   className="w-24 px-4 py-2.5 text-sm text-gray-900 dark:text-white bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -197,10 +209,10 @@ export function EditProfileDialog({ open, onClose, user }: Props) {
               </div>
               <p className="text-xs mt-1.5 text-gray-400 dark:text-gray-500">
                 {priceThousands
-                  ? <span className="text-violet-500 dark:text-violet-400">= {parseInt(priceThousands, 10).toLocaleString('uz-UZ')} 000 so&apos;m</span>
+                  ? <span className="text-violet-500 dark:text-violet-400">= {formatPrice(parseInt(priceThousands, 10))} 000 so&apos;m</span>
                   : 'Leave empty for no minimum'
                 }
-                {' · '}Max 1&nbsp;000&nbsp;000 so&apos;m
+                {' · '}Max {formatPrice(CREATOR_MAX_PRICE)} so&apos;m
               </p>
             </div>
           </>

@@ -5,6 +5,7 @@ import { Copy, Check, Share2 } from 'lucide-react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faXTwitter, faTelegram, faWhatsapp } from '@fortawesome/free-brands-svg-icons'
 import { Dialog } from '@/components/ui/Dialog'
+import { COPY_FEEDBACK_MS } from '@/lib/constants'
 
 interface Props {
   open: boolean
@@ -25,7 +26,7 @@ export function ShareDialog({ open, onClose, username }: Props) {
   async function handleCopy() {
     await navigator.clipboard.writeText(url)
     setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    setTimeout(() => setCopied(false), COPY_FEEDBACK_MS)
   }
 
   function shareOn(platform: 'twitter' | 'telegram' | 'whatsapp') {
@@ -49,18 +50,18 @@ export function ShareDialog({ open, onClose, username }: Props) {
   return (
     <Dialog open={open} onClose={onClose} title="Share profile">
       {/* Link + copy */}
-      <div className="flex items-center gap-2 mb-5">
-        <div className="flex-1 px-3 py-2 rounded-full bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-300 truncate font-mono select-all">
+      <button
+        onClick={handleCopy}
+        className="w-full flex items-center gap-2 px-4 py-2.5 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors group text-left mb-5"
+      >
+        <span className="flex-1 text-xs text-gray-500 dark:text-gray-400 truncate">
           {url}
-        </div>
-        <button
-          onClick={handleCopy}
-          className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 text-gray-500 hover:text-violet-600 hover:border-violet-300 dark:hover:border-violet-700 transition-colors"
-          title="Copy link"
-        >
-          {copied ? <Check size={15} className="text-green-500" /> : <Copy size={15} />}
-        </button>
-      </div>
+        </span>
+        {copied
+          ? <Check size={13} className="shrink-0 text-green-500" />
+          : <Copy size={13} className="shrink-0 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
+        }
+      </button>
 
       {/* Social share */}
       <div className="flex gap-2 mb-4">

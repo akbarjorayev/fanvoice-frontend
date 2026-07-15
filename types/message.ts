@@ -10,6 +10,7 @@ export interface SentMessage {
   paid_at: string | null
   creator_name: string
   creator_username: string
+  creator_avatar_url?: string | null
 }
 
 export interface MessageDetail {
@@ -43,4 +44,5 @@ export interface ReceivedMessage {
   read_at: string | null
   fan_name: string
   fan_username: string
+  fan_avatar_url?: string | null
 }

@@ -1,19 +1,15 @@
-import Image from 'next/image'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
-import { ArrowLeft, Coins, Clock, CheckCircle2, MoveRight, BadgeCheck } from 'lucide-react'
+import { ArrowLeft, Coins, Clock, CheckCircle2 } from 'lucide-react'
 import { getMeServer, getMessage } from '@/lib/api.server'
+import { AppHeader, navBtnClass } from '@/components/ui/AppHeader'
 import { ReadAloud } from './ReadAloud'
+import { creatorAmount, formatPrice } from '@/lib/fees'
+import { getUserInfo } from '@/lib/user'
+import { FanToCreatorCard } from '@/components/message/FanToCreatorCard'
 
 interface Props {
   params: Promise<{ id: string }>
-}
-
-function parseDate(dateStr: string): Date {
-  const normalized = dateStr.includes('Z') || dateStr.includes('+')
-    ? dateStr
-    : dateStr.replace(' ', 'T') + 'Z'
-  return new Date(normalized)
 }
 
 function formatDate(dateStr: string) {
@@ -24,56 +20,16 @@ function formatDate(dateStr: string) {
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-  }).format(parseDate(dateStr))
-}
-
-function formatPrice(n: number) {
-  return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
-}
-
-function Avatar({ name, avatarUrl, size }: { name: string; avatarUrl: string | null; size: number }) {
-  if (avatarUrl) {
-    return (
-      <Image
-        src={avatarUrl}
-        alt={name}
-        width={size}
-        height={size}
-        className="rounded-full object-cover shrink-0"
-        style={{ width: size, height: size }}
-      />
-    )
-  }
-  return (
-    <div
-      className="rounded-full bg-gradient-to-br from-white via-violet-400 to-blue-500 flex items-center justify-center shrink-0"
-      style={{ width: size, height: size }}
-    >
-      <span className="font-bold text-white" style={{ fontSize: size * 0.35 }}>
-        {name.charAt(0).toUpperCase()}
-      </span>
-    </div>
-  )
-}
-
-function YouBadge() {
-  return (
-    <span className="shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400">
-      you
-    </span>
-  )
-}
-
-function VerifiedBadge() {
-  return <BadgeCheck size={15} className="shrink-0 text-blue-500" />
+  }).format(new Date(dateStr))
 }
 
 export default async function MessagePage({ params }: Props) {
   const { id } = await params
-  const meResult = await getMeServer().catch(() => null)
+  const [meResult, result] = await Promise.all([
+    getMeServer().catch(() => null),
+    getMessage(id).catch(() => null),
+  ])
   if (!meResult) redirect('/login?expired=1')
-
-  const result = await getMessage(id).catch(() => null)
   if (!result) notFound()
 
   const { message: msg } = result
@@ -82,34 +38,27 @@ export default async function MessagePage({ params }: Props) {
   const isFan = userId === msg.fan_id
   const isPaid = msg.paid_at !== null
 
+  if (isCreator && !isPaid) notFound()
+
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950">
-      {/* Top bar */}
-      <div className="border-b border-gray-100 dark:border-gray-800/60 px-4 sm:px-6 h-14 flex items-center justify-between">
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
-        >
-          <ArrowLeft size={14} />
-          Dashboard
-        </Link>
-        {isFan && (
+      <AppHeader
+        left={<Link href="/dashboard" className={navBtnClass}><ArrowLeft size={14} />Dashboard</Link>}
+        meta={isFan && (
           isPaid ? (
             <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400">
               <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
               Paid
             </span>
           ) : (
-            <Link
-              href={`/pay/${msg.id}`}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition-colors"
-            >
+            <Link href={`/pay/${msg.id}`} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition-colors">
               <Coins size={13} />
               Pay {formatPrice(msg.price)} so&apos;m
             </Link>
           )
         )}
-      </div>
+        user={getUserInfo(meResult.user)}
+      />
 
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8 md:py-14">
         {/* Title */}
@@ -118,54 +67,20 @@ export default async function MessagePage({ params }: Props) {
         </h1>
 
         {/* People: From → To */}
-        <div className="flex items-center gap-2 sm:gap-4 mb-8 md:mb-10 p-4 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
-          {/* Fan */}
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-            <Avatar name={msg.fan_name} avatarUrl={msg.fan_avatar_url} size={40} />
-            <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-0.5">
-                From
-              </p>
-              <div className="flex items-center gap-1 min-w-0 flex-wrap">
-                <Link
-                  href={`/u/${msg.fan_username}`}
-                  className="text-sm font-semibold text-gray-900 dark:text-white hover:text-violet-600 dark:hover:text-violet-400 transition-colors truncate"
-                >
-                  {msg.fan_name}
-                </Link>
-                {msg.fan_verified && <VerifiedBadge />}
-                {userId === msg.fan_id && <YouBadge />}
-              </div>
-              <p className="text-[11px] text-gray-400 dark:text-gray-500 truncate mt-0.5">@{msg.fan_username}</p>
-            </div>
-          </div>
-
-          {/* Arrow */}
-          <div className="shrink-0 w-7 h-7 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center shadow-sm">
-            <MoveRight size={13} className="text-gray-400 dark:text-gray-500" />
-          </div>
-
-          {/* Creator */}
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-            <Avatar name={msg.creator_name} avatarUrl={msg.creator_avatar_url} size={40} />
-            <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-0.5">
-                To
-              </p>
-              <div className="flex items-center gap-1 min-w-0 flex-wrap">
-                <Link
-                  href={`/u/${msg.creator_username}`}
-                  className="text-sm font-semibold text-gray-900 dark:text-white hover:text-violet-600 dark:hover:text-violet-400 transition-colors truncate"
-                >
-                  {msg.creator_name}
-                </Link>
-                {msg.creator_verified && <VerifiedBadge />}
-                {userId === msg.creator_id && <YouBadge />}
-              </div>
-              <p className="text-[11px] text-gray-400 dark:text-gray-500 truncate mt-0.5">@{msg.creator_username}</p>
-            </div>
-          </div>
-        </div>
+        <FanToCreatorCard
+          fanName={msg.fan_name}
+          fanUsername={msg.fan_username}
+          fanAvatarUrl={msg.fan_avatar_url}
+          fanVerified={msg.fan_verified}
+          fanId={msg.fan_id}
+          creatorName={msg.creator_name}
+          creatorUsername={msg.creator_username}
+          creatorAvatarUrl={msg.creator_avatar_url}
+          creatorVerified={msg.creator_verified}
+          creatorId={msg.creator_id}
+          currentUserId={userId}
+          className="mb-8 md:mb-10"
+        />
 
         {/* Divider */}
         <div className="h-px bg-gray-100 dark:bg-gray-800 mb-8 md:mb-10" />
@@ -180,7 +95,7 @@ export default async function MessagePage({ params }: Props) {
           <div className="flex items-center gap-2">
             <Coins size={14} className="text-yellow-500 shrink-0" />
             <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-              {formatPrice(msg.price)} so&apos;m
+              {isCreator ? formatPrice(creatorAmount(msg.price)) : formatPrice(msg.price)} so&apos;m
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -198,6 +113,17 @@ export default async function MessagePage({ params }: Props) {
             </div>
           )}
         </div>
+
+        {/* Waiting banner — shown to the fan after paying, before creator reads */}
+        {isFan && isPaid && !msg.read_at && (
+          <div className="flex items-start gap-3 px-4 py-3.5 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 mb-4">
+            <Clock size={14} className="text-amber-500 shrink-0 mt-0.5" />
+            <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
+              <span className="font-semibold">Waiting for {msg.creator_name} to read this.</span>{' '}
+              Your payment is held in escrow — they receive it the moment they deliver.
+            </p>
+          </div>
+        )}
 
         {/* Read aloud — only shown to the creator while message is unread */}
         {isCreator && !msg.read_at && (

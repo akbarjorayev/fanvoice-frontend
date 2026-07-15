@@ -1,26 +1,25 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { faTelegram } from '@fortawesome/free-brands-svg-icons'
-import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton'
-import { EmailToggleForm } from '@/components/auth/EmailToggleForm'
+import { AuthProviders } from '@/components/auth/AuthProviders'
+import { SUPPORT_TELEGRAM_URL } from '@/lib/constants'
 
 export default function SignupPage() {
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-950 relative overflow-hidden flex items-center justify-center p-4">
-      {/* Aurora — dark mode only */}
-      <div className="pointer-events-none absolute -top-48 -left-48 w-[500px] h-[500px] rounded-full bg-violet-700/25 blur-[100px] dark:opacity-100 opacity-0 transition-opacity" />
-      <div className="pointer-events-none absolute top-10 right-0 w-[400px] h-[400px] rounded-full bg-fuchsia-700/20 blur-[100px] dark:opacity-100 opacity-0 transition-opacity" />
-      <div className="pointer-events-none absolute bottom-0 left-1/4 w-[350px] h-[350px] rounded-full bg-indigo-700/15 blur-[100px] dark:opacity-100 opacity-0 transition-opacity" />
+      {/* Aurora */}
+      <div className="pointer-events-none absolute -top-48 -left-48 w-[500px] h-[500px] rounded-full bg-violet-400/20 dark:bg-violet-700/25 blur-[100px]" />
+      <div className="pointer-events-none absolute top-10 right-0 w-[400px] h-[400px] rounded-full bg-fuchsia-400/15 dark:bg-fuchsia-700/20 blur-[100px]" />
+      <div className="pointer-events-none absolute bottom-0 left-1/4 w-[350px] h-[350px] rounded-full bg-indigo-400/10 dark:bg-indigo-700/15 blur-[100px]" />
 
       <div className="relative w-full max-w-sm">
         <div className="bg-white dark:bg-white/[0.04] dark:backdrop-blur-2xl border border-gray-100 dark:border-white/10 rounded-2xl shadow-sm dark:shadow-[0_0_80px_rgba(139,92,246,0.08)] p-8 sm:p-10">
 
           {/* Logo */}
           <div className="flex justify-center mb-7">
-            <div className="w-[52px] h-[52px] rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
-              <span className="text-white font-black text-xl tracking-tight">F</span>
-            </div>
+            <Image src="/fanvoice-logo.png" alt="FanVoice" width={52} height={52} className="rounded-2xl" />
           </div>
 
           {/* Heading */}
@@ -33,18 +32,7 @@ export default function SignupPage() {
             </p>
           </div>
 
-          {/* Google — primary */}
-          <GoogleSignInButton />
-
-          {/* Divider */}
-          <div className="flex items-center gap-3 my-4">
-            <div className="flex-1 h-px bg-gray-100 dark:bg-white/[0.06]" />
-            <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">or</span>
-            <div className="flex-1 h-px bg-gray-100 dark:bg-white/[0.06]" />
-          </div>
-
-          {/* Email — secondary, hidden by default */}
-          <EmailToggleForm mode="signup" />
+          <AuthProviders mode="signup" />
 
           {/* Terms */}
           <p className="mt-6 text-center text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
@@ -73,7 +61,7 @@ export default function SignupPage() {
           </span>
           <span className="w-px h-4 bg-gray-200 dark:bg-gray-800" />
           <a
-            href="https://t.me/fanvoice_support_bot"
+            href={SUPPORT_TELEGRAM_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-sm text-gray-400 dark:text-gray-500 hover:text-sky-500 dark:hover:text-sky-400 transition-colors"

@@ -1,35 +1,33 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Image from 'next/image'
-import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
-  ArrowLeft, PenLine, Mail, Calendar, BadgeCheck, LogOut, LinkIcon,
-  Share2, KeyRound, QrCode, Sparkles, AlertCircle,
+  PenLine, Mail, Calendar, BadgeCheck, LogOut, LinkIcon,
+  Share2, KeyRound, QrCode, Sparkles, AlertCircle, Coins,
 } from 'lucide-react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCircleNotch } from '@fortawesome/free-solid-svg-icons'
-import { EditProfileDialog } from './EditProfileDialog'
-import { SocialLinksDialog } from './SocialLinksDialog'
 import { SocialLinks } from './SocialLinks'
-import { ShareDialog } from './ShareDialog'
-import { QRDialog } from './QRDialog'
-import { BecomeCreatorDialog } from './BecomeCreatorDialog'
-import { GetVerifiedDialog } from './GetVerifiedDialog'
-import { ChangePasswordDialog } from './ChangePasswordDialog'
-import { Dialog } from '@/components/ui/Dialog'
-import { logout } from '@/lib/api'
+import { Avatar } from '@/components/ui/Avatar'
+import { CreatorBadge } from '@/components/ui/UserBadges'
+import { formatPrice } from '@/lib/fees'
 import type { User } from '@/types/user'
 import type { SocialLink } from '@/types/social-link'
+
+// Dialogs are only needed after a user interaction (opening one), so they're
+// lazy-loaded instead of shipped in the initial /me bundle.
+const EditProfileDialog = dynamic(() => import('./EditProfileDialog').then(m => m.EditProfileDialog))
+const SocialLinksDialog = dynamic(() => import('./SocialLinksDialog').then(m => m.SocialLinksDialog))
+const ShareDialog = dynamic(() => import('./ShareDialog').then(m => m.ShareDialog))
+const QRDialog = dynamic(() => import('./QRDialog').then(m => m.QRDialog))
+const BecomeCreatorDialog = dynamic(() => import('./BecomeCreatorDialog').then(m => m.BecomeCreatorDialog))
+const GetVerifiedDialog = dynamic(() => import('./GetVerifiedDialog').then(m => m.GetVerifiedDialog))
+const ChangePasswordDialog = dynamic(() => import('./ChangePasswordDialog').then(m => m.ChangePasswordDialog))
+const SignOutDialog = dynamic(() => import('@/components/ui/SignOutDialog').then(m => m.SignOutDialog))
 
 interface Props {
   user: User
   links: SocialLink[]
-}
-
-function formatPrice(n: number) {
-  return `${String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} so'm`
 }
 
 
@@ -39,6 +37,7 @@ export function ProfileCard({ user, links }: Props) {
 
   // dialogs
   const [editOpen, setEditOpen] = useState(false)
+  const [editFocusPrice, setEditFocusPrice] = useState(false)
   const [linksOpen, setLinksOpen] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
   const [qrOpen, setQrOpen] = useState(false)
@@ -46,7 +45,6 @@ export function ProfileCard({ user, links }: Props) {
   const [verifyOpen, setVerifyOpen] = useState(false)
   const [changePwdOpen, setChangePwdOpen] = useState(false)
   const [confirmLogout, setConfirmLogout] = useState(false)
-  const [loggingOut, setLoggingOut] = useState(false)
 
   // creator state
   const [isCreator, setIsCreator] = useState(!!user.is_creator)
@@ -63,52 +61,31 @@ export function ProfileCard({ user, links }: Props) {
   const price = user.creator_min_price ?? 0
   const profileIncomplete = isCreator && (!bio || price === 0)
 
-  const initial = displayName.charAt(0).toUpperCase()
   const fmt = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' })
   const memberSince = fmt.format(new Date(user.created_at))
   const creatorSince = user.creator_since ? fmt.format(new Date(user.creator_since)) : null
   const verifiedSince = user.creator_verified_at ? fmt.format(new Date(user.creator_verified_at)) : null
-
-  async function handleLogout() {
-    setLoggingOut(true)
-    await logout().catch(() => null)
-    router.push('/login')
-  }
 
   return (
     <>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
 
         {/* Cover */}
-        <div className="h-52 bg-gradient-to-br from-violet-700 via-violet-500 to-fuchsia-500 relative">
-          <Link
-            href="/dashboard"
-            className="absolute top-5 left-5 inline-flex items-center gap-1.5 text-sm font-medium text-white/80 hover:text-white transition-colors bg-black/20 hover:bg-black/30 px-4 py-2 rounded-full backdrop-blur-sm"
-          >
-            <ArrowLeft size={14} />
-            Dashboard
-          </Link>
-        </div>
+        <div className="h-52 bg-gradient-to-br from-violet-700 via-violet-500 to-fuchsia-500" />
 
         <div className="max-w-2xl mx-auto px-6">
 
           {/* Avatar row */}
           <div className="flex items-end justify-between -mt-14 mb-5">
             <div className="relative">
-              {user.avatar_url ? (
-                <Image
-                  src={user.avatar_url}
-                  alt={displayName}
-                  width={112}
-                  height={112}
-                  priority
-                  className="rounded-full ring-4 ring-gray-50 dark:ring-gray-950 object-cover"
-                />
-              ) : (
-                <div className="w-28 h-28 rounded-full ring-4 ring-gray-50 dark:ring-gray-950 bg-gradient-to-br from-white via-violet-400 to-blue-500 flex items-center justify-center">
-                  <span className="text-4xl font-black text-white drop-shadow">{initial}</span>
-                </div>
-              )}
+              <Avatar
+                name={displayName}
+                avatarUrl={user.avatar_url}
+                size={112}
+                priority
+                className="ring-4 ring-gray-50 dark:ring-gray-950"
+                textClassName="text-4xl font-black drop-shadow"
+              />
             </div>
 
             <div className="mb-2 flex items-center gap-2">
@@ -142,12 +119,7 @@ export function ProfileCard({ user, links }: Props) {
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white leading-tight">{displayName}</h1>
               {user.creator_verified_at && <BadgeCheck size={22} className="text-blue-500 flex-shrink-0" />}
-              {isCreator && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-100 dark:bg-violet-900/40 text-xs font-semibold text-violet-600 dark:text-violet-400">
-                  <Sparkles size={10} />
-                  Creator
-                </span>
-              )}
+              {isCreator && <CreatorBadge />}
             </div>
             {user.username
               ? <p className="text-gray-400 dark:text-gray-500 mt-1">@{user.username}</p>
@@ -186,26 +158,37 @@ export function ProfileCard({ user, links }: Props) {
               </div>
 
               {/* Min price — read-only, edit via Edit profile */}
-              <div className="rounded-2xl border border-gray-100 dark:border-white/[0.07] bg-white dark:bg-white/[0.03] p-4">
-                <p className="text-xs font-medium text-gray-400 dark:text-gray-500 mb-2.5">Min price per message</p>
+              <div className="rounded-2xl border border-gray-100 dark:border-white/[0.07] bg-white dark:bg-white/[0.03] px-4 py-3.5">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs font-medium text-gray-400 dark:text-gray-500">Min price per message</p>
+                  <button
+                    onClick={() => { setEditFocusPrice(true); setEditOpen(true) }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:text-violet-600 dark:hover:text-violet-400 hover:border-violet-300 dark:hover:border-violet-500/50 transition-colors"
+                  >
+                    <Coins size={11} />
+                    {price > 0 ? 'Edit' : 'Set price'}
+                  </button>
+                </div>
                 {price > 0
-                  ? <p className="text-sm text-gray-700 dark:text-gray-200">{formatPrice(price)}</p>
-                  : <p className="text-sm italic text-gray-300 dark:text-gray-600">No minimum — set one in Edit profile</p>}
+                  ? <p className="text-sm text-gray-700 dark:text-gray-200">{formatPrice(price)} so&apos;m</p>
+                  : <p className="text-sm italic text-gray-300 dark:text-gray-600">No minimum set</p>}
               </div>
 
               {/* Social links */}
               <div className="rounded-2xl border border-gray-100 dark:border-white/[0.07] bg-white dark:bg-white/[0.03] px-4 py-3.5">
-                <p className="text-xs font-medium text-gray-400 dark:text-gray-500 mb-2.5">Social links</p>
-                <div className="flex items-center gap-3">
-                  <SocialLinks links={links} />
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs font-medium text-gray-400 dark:text-gray-500">Social links</p>
                   <button
                     onClick={() => setLinksOpen(true)}
-                    className="inline-flex items-center gap-1.5 text-sm text-gray-400 dark:text-gray-500 hover:text-violet-600 dark:hover:text-violet-400 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:text-violet-600 dark:hover:text-violet-400 hover:border-violet-300 dark:hover:border-violet-500/50 transition-colors"
                   >
-                    <LinkIcon size={13} />
-                    {links.length === 0 ? 'Add links' : 'Manage links'}
+                    <LinkIcon size={11} />
+                    {links.length === 0 ? 'Add' : 'Manage'}
                   </button>
                 </div>
+                {links.length > 0
+                  ? <SocialLinks links={links} />
+                  : <p className="text-sm italic text-gray-300 dark:text-gray-600">No links yet</p>}
               </div>
 
             </div>
@@ -277,11 +260,11 @@ export function ProfileCard({ user, links }: Props) {
           )}
 
           {/* Actions */}
-          <div className="flex flex-col gap-4 pb-12">
+          <div className="flex items-center gap-3 pb-12">
             {user.has_password && (
               <button
                 onClick={() => setChangePwdOpen(true)}
-                className="inline-flex items-center gap-2 text-sm text-gray-400 dark:text-gray-500 hover:text-violet-600 dark:hover:text-violet-400 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:text-violet-600 dark:hover:text-violet-400 hover:border-violet-300 dark:hover:border-violet-500/50 transition-colors"
               >
                 <KeyRound size={14} />
                 Change password
@@ -289,7 +272,7 @@ export function ProfileCard({ user, links }: Props) {
             )}
             <button
               onClick={() => setConfirmLogout(true)}
-              className="inline-flex items-center gap-2 text-sm text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:text-red-500 dark:hover:text-red-400 hover:border-red-300 dark:hover:border-red-500/50 transition-colors"
             >
               <LogOut size={14} />
               Sign out
@@ -307,7 +290,7 @@ export function ProfileCard({ user, links }: Props) {
       />
       <GetVerifiedDialog open={verifyOpen} onClose={() => setVerifyOpen(false)} />
 
-      <EditProfileDialog open={editOpen} onClose={() => setEditOpen(false)} user={user} />
+      <EditProfileDialog open={editOpen} onClose={() => { setEditOpen(false); setEditFocusPrice(false) }} user={user} focusPrice={editFocusPrice} />
       <ChangePasswordDialog open={changePwdOpen} onClose={() => setChangePwdOpen(false)} />
 
       {user.username && (
@@ -319,32 +302,7 @@ export function ProfileCard({ user, links }: Props) {
 
       <SocialLinksDialog open={linksOpen} onClose={() => setLinksOpen(false)} initialLinks={links} />
 
-      <Dialog
-        open={confirmLogout}
-        onClose={() => setConfirmLogout(false)}
-        title="Sign out?"
-        description="You'll be returned to the login screen and will need to sign in again."
-      >
-        <div className="flex gap-3">
-          <button
-            onClick={() => setConfirmLogout(false)}
-            disabled={loggingOut}
-            className="flex-1 px-4 py-2.5 rounded-full text-sm font-medium text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleLogout}
-            disabled={loggingOut}
-            className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors disabled:opacity-50"
-          >
-            {loggingOut
-              ? <FontAwesomeIcon icon={faCircleNotch} spin style={{ width: 15, height: 15 }} />
-              : <LogOut size={15} />}
-            {loggingOut ? 'Signing out…' : 'Sign out'}
-          </button>
-        </div>
-      </Dialog>
+      <SignOutDialog open={confirmLogout} onClose={() => setConfirmLogout(false)} />
     </>
   )
 }

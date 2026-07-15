@@ -15,14 +15,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className="scroll-smooth" data-scroll-behavior="smooth">
       <body className={inter.className}>
-        <div className="w-full h-[22px] bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 overflow-hidden flex items-center">
-          <div className="animate-marquee flex whitespace-nowrap">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <span key={i} className="text-[10px] font-bold tracking-widest text-yellow-900/80 uppercase px-6">
-                ✦ FanVoice is working in BETA version
-              </span>
-            ))}
-          </div>
+        <div className="sticky top-0 z-[60] w-full h-[20px] bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-500 flex items-center justify-center">
+          <span className="text-[10px] font-bold tracking-widest text-yellow-900/80 uppercase">
+            ✦ FanVoice is working in BETA version
+          </span>
         </div>
         {children}
         <Toaster position="top-center" richColors theme="system" toastOptions={{ style: { borderRadius: '9999px' } }} />

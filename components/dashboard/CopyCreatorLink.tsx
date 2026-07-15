@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link2, Check } from 'lucide-react'
+import { COPY_FEEDBACK_MS } from '@/lib/constants'
 
 interface Props {
   username: string
@@ -9,13 +10,18 @@ interface Props {
 
 export function CopyCreatorLink({ username }: Props) {
   const [copied, setCopied] = useState(false)
-  const displayUrl = `fanvoice.uz/u/${username}`
-  const fullUrl = `https://fanvoice.uz/u/${username}`
+  const [fullUrl, setFullUrl] = useState('')
+
+  useEffect(() => {
+    setFullUrl(`${window.location.origin}/u/${username}`)
+  }, [username])
+
+  const displayUrl = fullUrl.replace(/^https?:\/\//, '')
 
   function handleCopy() {
     navigator.clipboard.writeText(fullUrl).then(() => {
       setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      setTimeout(() => setCopied(false), COPY_FEEDBACK_MS)
     })
   }
 

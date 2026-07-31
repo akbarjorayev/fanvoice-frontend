@@ -1,3 +1,6 @@
+'use client'
+
+import { useState } from 'react'
 import Image from 'next/image'
 
 const HASH_GRADIENTS = [
@@ -55,6 +58,7 @@ export function Avatar({
 }: AvatarProps) {
   const initial = name.charAt(0).toUpperCase()
   const style = sizeClassName ? undefined : { width: size, height: size }
+  const [loaded, setLoaded] = useState(priority)
 
   if (avatarUrl) {
     return (
@@ -64,7 +68,8 @@ export function Avatar({
         width={size}
         height={size}
         priority={priority}
-        className={`rounded-full object-cover shrink-0 ${sizeClassName ?? ''} ${className}`}
+        onLoad={() => setLoaded(true)}
+        className={`rounded-full object-cover shrink-0 transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'} ${sizeClassName ?? ''} ${className}`}
         style={style}
       />
     )

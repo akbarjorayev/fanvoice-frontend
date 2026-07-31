@@ -19,6 +19,7 @@ export function ChangePasswordDialog({ open, onClose }: Props) {
   const [showCurrent, setShowCurrent] = useState(false)
   const [showNew, setShowNew] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [confirmError, setConfirmError] = useState(false)
 
   function handleClose() {
     if (loading) return
@@ -27,13 +28,16 @@ export function ChangePasswordDialog({ open, onClose }: Props) {
     setConfirm('')
     setShowCurrent(false)
     setShowNew(false)
+    setConfirmError(false)
     onClose()
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    setConfirmError(false)
 
     if (newPwd !== confirm) {
+      requestAnimationFrame(() => setConfirmError(true))
       toast.error("New passwords don't match")
       return
     }
@@ -80,7 +84,9 @@ export function ChangePasswordDialog({ open, onClose }: Props) {
             className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
           >
             <FontAwesomeIcon
+              key={showCurrent ? 'hide' : 'show'}
               icon={showCurrent ? faEyeSlash : faEye}
+              className="animate-scale-in"
               style={{ width: 14, height: 14 }}
             />
           </button>
@@ -107,7 +113,9 @@ export function ChangePasswordDialog({ open, onClose }: Props) {
               className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
             >
               <FontAwesomeIcon
+                key={showNew ? 'hide' : 'show'}
                 icon={showNew ? faEyeSlash : faEye}
+                className="animate-scale-in"
                 style={{ width: 14, height: 14 }}
               />
             </button>
@@ -123,11 +131,11 @@ export function ChangePasswordDialog({ open, onClose }: Props) {
           type="password"
           autoComplete="new-password"
           value={confirm}
-          onChange={(e) => setConfirm(e.target.value)}
+          onChange={(e) => { setConfirm(e.target.value); setConfirmError(false) }}
           placeholder="Confirm new password"
           required
           disabled={loading}
-          className={inputClass}
+          className={`${inputClass} ${confirmError ? 'border-red-400 dark:border-red-500 focus:ring-red-500/60 animate-shake' : ''}`}
         />
 
         <div className="flex gap-3 pt-1">

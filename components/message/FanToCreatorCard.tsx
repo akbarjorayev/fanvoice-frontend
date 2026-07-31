@@ -33,7 +33,7 @@ export function FanToCreatorCard({
   className = '',
 }: FanToCreatorCardProps) {
   return (
-    <div className={`flex items-center gap-2 sm:gap-4 p-4 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 ${className}`}>
+    <div className={`group flex items-center gap-2 sm:gap-4 p-4 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:border-violet-200 dark:hover:border-violet-800 transition-colors ${className}`}>
       {/* Fan */}
       <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
         <Avatar name={fanName} avatarUrl={fanAvatarUrl} size={40} />
@@ -56,8 +56,8 @@ export function FanToCreatorCard({
       </div>
 
       {/* Arrow */}
-      <div className="shrink-0 w-7 h-7 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center shadow-sm">
-        <MoveRight size={13} className="text-gray-400 dark:text-gray-500" />
+      <div className="shrink-0 w-7 h-7 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center shadow-sm transition-colors group-hover:border-violet-300 dark:group-hover:border-violet-700">
+        <MoveRight size={13} className="text-gray-400 dark:text-gray-500 transition-all duration-300 group-hover:translate-x-0.5 group-hover:text-violet-500" />
       </div>
 
       {/* Creator */}

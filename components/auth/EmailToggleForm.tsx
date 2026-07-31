@@ -29,6 +29,8 @@ export function EmailToggleForm({ mode, disabled, forceClose, onLoadingChange, o
   const [confirm, setConfirm] = useState('')
   const [showPwd, setShowPwd] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [confirmError, setConfirmError] = useState(false)
+  const [credError, setCredError] = useState(false)
   const emailRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -48,7 +50,10 @@ export function EmailToggleForm({ mode, disabled, forceClose, onLoadingChange, o
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    setConfirmError(false)
+    setCredError(false)
     if (mode === 'signup' && password !== confirm) {
+      requestAnimationFrame(() => setConfirmError(true))
       toast.error("Passwords don't match")
       return
     }
@@ -64,6 +69,7 @@ export function EmailToggleForm({ mode, disabled, forceClose, onLoadingChange, o
       router.push('/dashboard')
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Something went wrong')
+      requestAnimationFrame(() => setCredError(true))
       setLoading(false)
       onLoadingChange?.(false)
     }
@@ -71,6 +77,7 @@ export function EmailToggleForm({ mode, disabled, forceClose, onLoadingChange, o
 
   const inputBase =
     'w-full h-11 px-4 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-white/[0.06] text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500/60 focus:border-transparent transition-all disabled:opacity-60'
+  const errorInputClass = 'border-red-400 dark:border-red-500 focus:ring-red-500/60'
 
   return (
     <div>
@@ -96,6 +103,7 @@ export function EmailToggleForm({ mode, disabled, forceClose, onLoadingChange, o
 
       {/* Collapsible form */}
       <div
+        inert={!open}
         className={`overflow-hidden transition-all duration-300 ease-in-out ${
           open ? 'max-h-[420px] opacity-100 mt-3' : 'max-h-0 opacity-0'
         }`}
@@ -109,11 +117,11 @@ export function EmailToggleForm({ mode, disabled, forceClose, onLoadingChange, o
             type="email"
             autoComplete="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => { setEmail(e.target.value); setCredError(false) }}
             placeholder="Email address"
             required
             disabled={loading}
-            className={inputBase}
+            className={`${inputBase} ${credError ? `${errorInputClass} animate-shake` : ''}`}
           />
 
           <div className="relative">
@@ -122,11 +130,11 @@ export function EmailToggleForm({ mode, disabled, forceClose, onLoadingChange, o
               type={showPwd ? 'text' : 'password'}
               autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => { setPassword(e.target.value); setCredError(false) }}
               placeholder="Password"
               required
               disabled={loading}
-              className={`${inputBase} pr-11`}
+              className={`${inputBase} pr-11 ${credError ? `${errorInputClass} animate-shake` : ''}`}
             />
             <button
               type="button"
@@ -135,7 +143,9 @@ export function EmailToggleForm({ mode, disabled, forceClose, onLoadingChange, o
               className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
             >
               <FontAwesomeIcon
+                key={showPwd ? 'hide' : 'show'}
                 icon={showPwd ? faEyeSlash : faEye}
+                className="animate-scale-in"
                 style={{ width: 14, height: 14 }}
               />
             </button>
@@ -147,11 +157,11 @@ export function EmailToggleForm({ mode, disabled, forceClose, onLoadingChange, o
               type="password"
               autoComplete="new-password"
               value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
+              onChange={(e) => { setConfirm(e.target.value); setConfirmError(false) }}
               placeholder="Confirm password"
               required
               disabled={loading}
-              className={inputBase}
+              className={`${inputBase} ${confirmError ? `${errorInputClass} animate-shake` : ''}`}
             />
           )}
 

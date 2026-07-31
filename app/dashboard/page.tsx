@@ -3,7 +3,7 @@ import { Send, Inbox, Bell, Coins, Banknote } from 'lucide-react'
 import { getMeServer, getProfileServer, getSentMessages, getReceivedMessages, getMessageCounts } from '@/lib/api.server'
 import { AppHeader } from '@/components/ui/AppHeader'
 import { MessageTabs } from '@/components/dashboard/MessageTabs'
-import { formatPrice } from '@/lib/fees'
+import { AnimatedAmount } from '@/components/dashboard/AnimatedAmount'
 import { getUserInfo } from '@/lib/user'
 import { PAGE_SIZE } from '@/lib/constants'
 
@@ -103,7 +103,7 @@ export default async function DashboardPage({ searchParams }: Props) {
                 Total earned
               </div>
               <p className="relative text-4xl sm:text-5xl font-extrabold text-white tracking-tight">
-                {formatPrice(counts.total_earned)}
+                <AnimatedAmount value={counts.total_earned} />
                 <span className="text-lg sm:text-xl font-semibold text-emerald-50/70 ml-2">so&apos;m</span>
               </p>
             </div>

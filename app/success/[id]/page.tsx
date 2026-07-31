@@ -32,11 +32,11 @@ export default async function SuccessPage({ params }: Props) {
       <div className="flex-1 flex flex-col items-center justify-center px-4 text-center">
         <div className="flex flex-col items-center gap-7 max-w-sm w-full">
           {/* Icon */}
-          <div className="w-16 h-16 rounded-2xl bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center">
+          <div className="animate-tada w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center">
             <CheckCircle2 size={30} className="text-emerald-500" />
           </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="animate-fade-up anim-delay-100 flex flex-col gap-2">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Payment sent!</h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Your {formatPrice(msg.price)} so&apos;m is held securely in escrow for{' '}
@@ -45,7 +45,7 @@ export default async function SuccessPage({ params }: Props) {
           </div>
 
           {/* What happens next */}
-          <div className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-5 text-left">
+          <div className="animate-fade-up anim-delay-200 w-full bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl p-5 text-left">
             <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4">What happens next</p>
             <div className="flex flex-col gap-4">
               <div className="flex items-start gap-3">
@@ -79,7 +79,7 @@ export default async function SuccessPage({ params }: Props) {
           </div>
 
           {/* Actions */}
-          <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
+          <div className="animate-fade-up anim-delay-300 flex flex-col sm:flex-row items-center gap-3 w-full">
             <Link
               href={`/message/${id}`}
               className="w-full text-center px-5 py-2.5 rounded-full bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition-colors"

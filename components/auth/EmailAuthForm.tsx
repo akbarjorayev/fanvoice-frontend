@@ -17,6 +17,8 @@ export function EmailAuthForm() {
   const [confirm, setConfirm] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [confirmError, setConfirmError] = useState(false)
+  const [credError, setCredError] = useState(false)
 
   function handleForgotPassword() {
     toast.info("Password recovery is coming soon! 😅 We're still building it.")
@@ -26,12 +28,17 @@ export function EmailAuthForm() {
     setMode(next)
     setPassword('')
     setConfirm('')
+    setConfirmError(false)
+    setCredError(false)
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    setConfirmError(false)
+    setCredError(false)
 
     if (mode === 'signup' && password !== confirm) {
+      requestAnimationFrame(() => setConfirmError(true))
       toast.error("Passwords don't match")
       return
     }
@@ -46,34 +53,36 @@ export function EmailAuthForm() {
       router.push('/dashboard')
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Something went wrong')
+      requestAnimationFrame(() => setCredError(true))
       setLoading(false)
     }
   }
 
   const inputClass =
     'w-full h-12 px-4 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-white/[0.06] text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500/60 focus:border-transparent transition-all'
+  const errorInputClass = 'border-red-400 dark:border-red-500 focus:ring-red-500/60'
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <input
         type="email"
         value={email}
-        onChange={(e) => setEmail(e.target.value)}
+        onChange={(e) => { setEmail(e.target.value); setCredError(false) }}
         placeholder="Email address"
         required
         disabled={loading}
-        className={inputClass}
+        className={`${inputClass} ${credError ? `${errorInputClass} animate-shake` : ''}`}
       />
 
       <div className="relative">
         <input
           type={showPassword ? 'text' : 'password'}
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e) => { setPassword(e.target.value); setCredError(false) }}
           placeholder="Password"
           required
           disabled={loading}
-          className={`${inputClass} pr-11`}
+          className={`${inputClass} pr-11 ${credError ? `${errorInputClass} animate-shake` : ''}`}
         />
         <button
           type="button"
@@ -82,7 +91,9 @@ export function EmailAuthForm() {
           className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
         >
           <FontAwesomeIcon
+            key={showPassword ? 'hide' : 'show'}
             icon={showPassword ? faEyeSlash : faEye}
+            className="animate-scale-in"
             style={{ width: 15, height: 15 }}
           />
         </button>
@@ -92,11 +103,11 @@ export function EmailAuthForm() {
         <input
           type="password"
           value={confirm}
-          onChange={(e) => setConfirm(e.target.value)}
+          onChange={(e) => { setConfirm(e.target.value); setConfirmError(false) }}
           placeholder="Confirm password"
           required
           disabled={loading}
-          className={inputClass}
+          className={`${inputClass} ${confirmError ? `${errorInputClass} animate-shake` : ''}`}
         />
       )}
 

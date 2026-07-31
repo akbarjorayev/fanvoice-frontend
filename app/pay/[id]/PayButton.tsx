@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2, ArrowRight } from 'lucide-react'
+import { Loader2, ArrowRight, Check } from 'lucide-react'
 import { payMessage } from '@/lib/api'
 
 interface Props {
@@ -13,6 +13,7 @@ interface Props {
 export function PayButton({ messageId, price: _ }: Props) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   async function handlePay() {
@@ -20,7 +21,9 @@ export function PayButton({ messageId, price: _ }: Props) {
     setError(null)
     try {
       await payMessage(messageId)
-      router.push(`/success/${messageId}`)
+      setLoading(false)
+      setSuccess(true)
+      setTimeout(() => router.push(`/success/${messageId}`), 450)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Payment failed')
       setLoading(false)
@@ -31,10 +34,19 @@ export function PayButton({ messageId, price: _ }: Props) {
     <div className="w-full flex flex-col items-center gap-3">
       <button
         onClick={handlePay}
-        disabled={loading}
-        className="w-full inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed text-white dark:text-gray-900 text-base font-bold transition-colors"
+        disabled={loading || success}
+        className={`w-full inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl disabled:cursor-not-allowed text-base font-bold transition-all duration-300 ${
+          success
+            ? 'bg-emerald-500 text-white'
+            : 'bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 disabled:opacity-50 text-white dark:text-gray-900'
+        }`}
       >
-        {loading ? (
+        {success ? (
+          <>
+            <Check size={18} className="animate-scale-in" />
+            Paid!
+          </>
+        ) : loading ? (
           <>
             <Loader2 size={18} className="animate-spin" />
             Processing…

@@ -1,3 +1,6 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { AvatarMenu } from '@/components/dashboard/AvatarMenu'
@@ -10,8 +13,23 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({ left, meta, user }: AppHeaderProps) {
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    function onScroll() {
+      setScrolled(window.scrollY > 8)
+    }
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
   return (
-    <header className="sticky top-[20px] z-40 h-14 px-4 sm:px-6 flex items-center justify-between gap-4 bg-white/70 dark:bg-gray-950/70 backdrop-blur-xl">
+    <header
+      className={`sticky top-[20px] z-40 h-14 px-4 sm:px-6 flex items-center justify-between gap-4 bg-white/70 dark:bg-gray-950/70 backdrop-blur-xl transition-shadow duration-300 ${
+        scrolled ? 'shadow-lg shadow-black/5 dark:shadow-black/30' : 'shadow-none'
+      }`}
+    >
       <div className="shrink-0">
         {left ?? (
           <Link href="/" className="flex items-center gap-2">

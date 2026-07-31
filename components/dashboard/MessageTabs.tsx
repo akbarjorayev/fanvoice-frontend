@@ -317,10 +317,10 @@ export function MessageTabs({
               const displayPrice = tab === 'received' ? creatorAmount(msg.price) : msg.price
 
               return (
-                <div
+                <Link
                   key={msg.id}
-                  onClick={() => router.push(`/message/${msg.id}`)}
-                  className="flex items-start gap-3 px-4 py-4 hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors cursor-pointer"
+                  href={`/message/${msg.id}`}
+                  className="flex items-start gap-3 px-4 py-4 hover:bg-gray-50 dark:hover:bg-gray-800/40 active:bg-gray-100 dark:active:bg-gray-800/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-inset transition-colors"
                 >
                   <Avatar name={name} avatarUrl={avatarUrl} size={40} variant="hashed" textClassName="font-bold text-sm select-none" />
 
@@ -372,7 +372,7 @@ export function MessageTabs({
                       {tab === 'sent' && <StatusPills message={msg} isPaid={isPaid} />}
                     </div>
                   </div>
-                </div>
+                </Link>
               )
             })}
           </div>

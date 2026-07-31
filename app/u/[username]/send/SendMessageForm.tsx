@@ -69,10 +69,10 @@ export function SendMessageForm({ creatorId, creatorName, creatorUsername, minPr
     const priceFormatted = formatPrice(priceActual)
 
     return (
-      <div className="flex flex-col gap-6 py-4">
+      <div className="animate-fade-up flex flex-col gap-6 py-4">
         {/* Status */}
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-violet-100 dark:bg-violet-500/20 flex items-center justify-center shrink-0">
+          <div className="animate-scale-in w-9 h-9 rounded-full bg-violet-100 dark:bg-violet-500/20 flex items-center justify-center shrink-0">
             <Coins size={16} className="text-violet-600 dark:text-violet-400" />
           </div>
           <div>

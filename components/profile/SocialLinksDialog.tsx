@@ -160,7 +160,7 @@ export function SocialLinksDialog({ open, onClose, initialLinks }: Props) {
             <div key={link.platform} className="rounded-2xl border border-gray-100 dark:border-gray-700/60 bg-gray-50 dark:bg-gray-800/50 overflow-hidden">
               {isEditing ? (
                 /* Edit mode — replaces row */
-                <div className="p-3 space-y-2.5">
+                <div className="animate-fade-in p-3 space-y-2.5">
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center shrink-0">
                       <FontAwesomeIcon icon={icon} className="text-gray-500 dark:text-gray-400" style={{ width: 12, height: 12 }} />
@@ -199,7 +199,7 @@ export function SocialLinksDialog({ open, onClose, initialLinks }: Props) {
                 </div>
               ) : (
                 /* Normal row */
-                <div className="flex items-center justify-between gap-3 px-3 py-3">
+                <div className="animate-fade-in flex items-center justify-between gap-3 px-3 py-3">
                   {/* Left: icon + info */}
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div className="w-8 h-8 rounded-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center shrink-0">
@@ -214,7 +214,7 @@ export function SocialLinksDialog({ open, onClose, initialLinks }: Props) {
                   {/* Right: actions */}
                   <div className="flex items-center gap-1 shrink-0">
                     {confirmDeletePlatform === link.platform ? (
-                      <>
+                      <span className="animate-scale-in flex items-center gap-1">
                         <span className="text-xs font-medium text-red-500 mr-1">Remove?</span>
                         <button
                           onClick={() => setConfirmDeletePlatform(null)}
@@ -231,9 +231,9 @@ export function SocialLinksDialog({ open, onClose, initialLinks }: Props) {
                             ? <FontAwesomeIcon icon={faCircleNotch} spin style={{ width: 10, height: 10 }} />
                             : 'Yes'}
                         </button>
-                      </>
+                      </span>
                     ) : (
-                      <>
+                      <span className="animate-fade-in flex items-center gap-1">
                         <button
                           onClick={() => { setEditingPlatform(link.platform); setEditUrl(link.url) }}
                           disabled={isDeleting}
@@ -248,7 +248,7 @@ export function SocialLinksDialog({ open, onClose, initialLinks }: Props) {
                         >
                           <X size={14} />
                         </button>
-                      </>
+                      </span>
                     )}
                   </div>
                 </div>
@@ -264,7 +264,7 @@ export function SocialLinksDialog({ open, onClose, initialLinks }: Props) {
           <p className="text-xs text-center text-gray-400 dark:text-gray-500">All platforms added.</p>
         ) : (
           <form onSubmit={handleAdd}>
-            <div className={`overflow-hidden transition-all duration-500 ease-in-out ${addOpen ? 'max-h-[200px] opacity-100 mb-3' : 'max-h-0 opacity-0'}`}>
+            <div inert={!addOpen} className={`overflow-hidden transition-all duration-500 ease-in-out ${addOpen ? 'max-h-[200px] opacity-100 mb-3' : 'max-h-0 opacity-0'}`}>
               <div className="p-0.5">
                 {/* Platform icon picker */}
                 <div className="flex flex-wrap justify-between gap-2">
@@ -288,7 +288,7 @@ export function SocialLinksDialog({ open, onClose, initialLinks }: Props) {
             </div>
 
             {/* URL input — shown after platform picked */}
-            <div className={`overflow-hidden transition-all duration-500 ease-in-out ${addOpen ? 'max-h-[80px] opacity-100 mb-3' : 'max-h-0 opacity-0'}`}>
+            <div inert={!addOpen} className={`overflow-hidden transition-all duration-500 ease-in-out ${addOpen ? 'max-h-[80px] opacity-100 mb-3' : 'max-h-0 opacity-0'}`}>
               <div className="p-0.5">
                 <div className="relative">
                   <FontAwesomeIcon icon={faLink} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" style={{ width: 12, height: 12 }} />

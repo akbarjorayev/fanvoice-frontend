@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Copy, Check, Share2 } from 'lucide-react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faXTwitter, faTelegram, faWhatsapp } from '@fortawesome/free-brands-svg-icons'
+import { useTranslations } from 'next-intl'
 import { Dialog } from '@/components/ui/Dialog'
 import { COPY_FEEDBACK_MS } from '@/lib/constants'
 
@@ -14,6 +15,8 @@ interface Props {
 }
 
 export function ShareDialog({ open, onClose, username }: Props) {
+  const t = useTranslations('shareDialog')
+  const tCommon = useTranslations('common')
   const [copied, setCopied] = useState(false)
   const [canShare, setCanShare] = useState(false)
   const [url, setUrl] = useState('')
@@ -29,14 +32,10 @@ export function ShareDialog({ open, onClose, username }: Props) {
     setTimeout(() => setCopied(false), COPY_FEEDBACK_MS)
   }
 
-  function shareOn(platform: 'twitter' | 'telegram' | 'whatsapp') {
-    const u = encodeURIComponent(url)
-    const links = {
-      twitter:  `https://twitter.com/intent/tweet?url=${u}`,
-      telegram: `https://t.me/share/url?url=${u}`,
-      whatsapp: `https://wa.me/?text=${u}`,
-    }
-    window.open(links[platform], '_blank', 'noopener,noreferrer')
+  const shareUrls = {
+    twitter: `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}`,
+    telegram: `https://t.me/share/url?url=${encodeURIComponent(url)}`,
+    whatsapp: `https://wa.me/?text=${encodeURIComponent(url)}`,
   }
 
   async function handleShare() {
@@ -48,7 +47,7 @@ export function ShareDialog({ open, onClose, username }: Props) {
   }
 
   return (
-    <Dialog open={open} onClose={onClose} title="Share profile">
+    <Dialog open={open} onClose={onClose} title={t('title')}>
       {/* Link + copy */}
       <button
         onClick={handleCopy}
@@ -65,27 +64,33 @@ export function ShareDialog({ open, onClose, username }: Props) {
 
       {/* Social share */}
       <div className="flex gap-2 mb-4">
-        <button
-          onClick={() => shareOn('twitter')}
+        <a
+          href={shareUrls.twitter}
+          target="_blank"
+          rel="noopener noreferrer"
           className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full border border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-black hover:text-black dark:hover:border-white dark:hover:text-white transition-colors text-sm font-medium"
         >
           <FontAwesomeIcon icon={faXTwitter} style={{ width: 13 }} />
           X
-        </button>
-        <button
-          onClick={() => shareOn('telegram')}
+        </a>
+        <a
+          href={shareUrls.telegram}
+          target="_blank"
+          rel="noopener noreferrer"
           className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full border border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-[#2AABEE] hover:text-[#2AABEE] transition-colors text-sm font-medium"
         >
           <FontAwesomeIcon icon={faTelegram} style={{ width: 13 }} />
           Telegram
-        </button>
-        <button
-          onClick={() => shareOn('whatsapp')}
+        </a>
+        <a
+          href={shareUrls.whatsapp}
+          target="_blank"
+          rel="noopener noreferrer"
           className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full border border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-[#25D366] hover:text-[#25D366] transition-colors text-sm font-medium"
         >
           <FontAwesomeIcon icon={faWhatsapp} style={{ width: 13 }} />
           WhatsApp
-        </button>
+        </a>
       </div>
 
       {/* Native share */}
@@ -95,7 +100,7 @@ export function ShareDialog({ open, onClose, username }: Props) {
           className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-full bg-violet-600 text-white text-sm font-semibold hover:bg-violet-500 transition-colors"
         >
           <Share2 size={14} />
-          Share
+          {tCommon('share')}
         </button>
       )}
     </Dialog>

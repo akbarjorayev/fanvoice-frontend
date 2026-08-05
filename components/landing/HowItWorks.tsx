@@ -1,5 +1,6 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPenToSquare, faMicrophone, faCircleCheck } from '@fortawesome/free-solid-svg-icons'
+import { useTranslations } from 'next-intl'
 import { FadeIn } from './FadeIn'
 import { Tilt3D } from './Tilt3D'
 import { CREATOR_SHARE_PCT, PLATFORM_FEE_PCT, creatorAmount, formatPrice } from '@/lib/fees'
@@ -24,18 +25,19 @@ function Waveform() {
 }
 
 function PreviewForm() {
+  const t = useTranslations('howItWorks')
   return (
     <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-white/[0.07] p-4 mb-6">
-      <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">Your message</p>
+      <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">{t('yourMessage')}</p>
       <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-white/[0.08] rounded-lg px-3 py-2 mb-3 text-xs text-gray-600 dark:text-gray-300 italic">
-        &ldquo;Say hi to my sister Sofia!&rdquo;
+        {t('sampleMessage')}
       </div>
       <div className="flex items-center justify-between">
         <span className="text-xs text-gray-500 dark:text-gray-400">
-          Amount: <span className="text-violet-600 dark:text-violet-400 font-bold">5,000 so&apos;m</span>
+          {t('amountLabel')} <span className="text-violet-600 dark:text-violet-400 font-bold">5,000 so&apos;m</span>
         </span>
         <div className="px-3 py-1 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-full text-[10px] text-white font-semibold shadow-md shadow-violet-500/30">
-          Send →
+          {t('sendArrow')}
         </div>
       </div>
     </div>
@@ -43,6 +45,7 @@ function PreviewForm() {
 }
 
 function PreviewLive() {
+  const t = useTranslations('howItWorks')
   return (
     <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-white/[0.07] p-4 mb-6">
       <div className="flex items-center gap-2.5 mb-4">
@@ -51,11 +54,11 @@ function PreviewLive() {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-xs font-semibold text-gray-900 dark:text-white leading-none">@alexkhan</p>
-          <p className="text-[10px] text-gray-400 mt-0.5">24K fans</p>
+          <p className="text-[10px] text-gray-400 mt-0.5">{t('fansCount')}</p>
         </div>
         <div className="flex items-center gap-0.5 bg-red-500 rounded-full px-2 py-0.5 shrink-0">
           <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-          <span className="text-[9px] font-bold text-white uppercase tracking-wide">Live</span>
+          <span className="text-[9px] font-bold text-white uppercase tracking-wide">{t('live')}</span>
         </div>
       </div>
       <Waveform />
@@ -64,60 +67,43 @@ function PreviewLive() {
 }
 
 function PreviewSplit() {
+  const t = useTranslations('howItWorks')
   return (
     <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-white/[0.07] p-4 mb-6">
-      <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">Payment split</p>
-      <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">Fan pays <strong className="text-gray-900 dark:text-white">10,000 so&apos;m</strong></div>
+      <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">{t('paymentSplit')}</p>
+      <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">{t('fanPays')} <strong className="text-gray-900 dark:text-white">10,000 so&apos;m</strong></div>
       <div className="flex gap-0.5 h-2 rounded-full overflow-hidden mb-2">
         <div className="bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full" style={{ flex: CREATOR_SHARE_PCT }} />
         <div className="bg-gray-300 dark:bg-gray-700 rounded-full" style={{ flex: PLATFORM_FEE_PCT }} />
       </div>
       <div className="flex items-center justify-between text-[11px] mb-3">
-        <span className="text-violet-600 dark:text-violet-400 font-bold">Creator: {formatPrice(creatorAmount(10000))} so&apos;m</span>
-        <span className="text-gray-400">Platform: {formatPrice(10000 - creatorAmount(10000))}</span>
+        <span className="text-violet-600 dark:text-violet-400 font-bold">{t('creatorLabel', { amount: formatPrice(creatorAmount(10000)) })}</span>
+        <span className="text-gray-400">{t('platformLabel', { amount: formatPrice(10000 - creatorAmount(10000)) })}</span>
       </div>
       <div className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-lg px-2.5 py-1.5">
         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-        <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold">Released automatically on read</span>
+        <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold">{t('releasedAutomatically')}</span>
       </div>
     </div>
   )
 }
 
-const steps = [
-  {
-    number: '01',
-    icon: faPenToSquare,
-    Preview: PreviewForm,
-    title: 'Write your message',
-    description: 'Choose a creator, write what you want them to say, and set your price. Payment is held in escrow — nothing moves until delivery.',
-    detail: 'Takes less than 2 minutes',
-    accent: 'from-violet-500 to-fuchsia-500',
-    glow: 'rgba(139,92,246,0.14)',
-  },
-  {
-    number: '02',
-    icon: faMicrophone,
-    Preview: PreviewLive,
-    title: 'Creator reads it aloud',
-    description: 'The creator reads your message live to their audience — on stream, in a video, or a personal shoutout. Verified by voice.',
-    detail: 'On stream or in a video',
-    accent: 'from-fuchsia-500 to-pink-500',
-    glow: 'rgba(217,70,239,0.14)',
-  },
-  {
-    number: '03',
-    icon: faCircleCheck,
-    Preview: PreviewSplit,
-    title: 'Everyone wins',
-    description: `You get your moment heard by their audience. The creator earns ${CREATOR_SHARE_PCT}% of what you paid, released automatically the moment they deliver.`,
-    detail: 'Paid instantly on read',
-    accent: 'from-emerald-500 to-teal-500',
-    glow: 'rgba(16,185,129,0.14)',
-  },
-]
+const stepMeta = [
+  { key: 'write', number: '01', icon: faPenToSquare, Preview: PreviewForm, accent: 'from-violet-500 to-fuchsia-500', glow: 'rgba(139,92,246,0.14)' },
+  { key: 'read', number: '02', icon: faMicrophone, Preview: PreviewLive, accent: 'from-fuchsia-500 to-pink-500', glow: 'rgba(217,70,239,0.14)' },
+  { key: 'win', number: '03', icon: faCircleCheck, Preview: PreviewSplit, accent: 'from-emerald-500 to-teal-500', glow: 'rgba(16,185,129,0.14)' },
+] as const
 
 export function HowItWorks() {
+  const t = useTranslations('howItWorks')
+  const steps = stepMeta.map((meta) => ({
+    ...meta,
+    title: t(`steps.${meta.key}.title`),
+    description: meta.key === 'win'
+      ? t('steps.win.description', { pct: CREATOR_SHARE_PCT })
+      : t(`steps.${meta.key}.description`),
+    detail: t(`steps.${meta.key}.detail`),
+  }))
   return (
     <section
       id="how-it-works"
@@ -142,20 +128,20 @@ export function HowItWorks() {
       <div className="max-w-5xl mx-auto relative">
         <FadeIn className="text-center mb-16">
           <p className="text-violet-600 dark:text-violet-400 text-xs font-semibold tracking-[0.2em] uppercase mb-4">
-            How it works
+            {t('eyebrow')}
           </p>
           <h2 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white mb-4 leading-tight">
-            From fan to{' '}
+            {t('titlePrefix')}{' '}
             <span
               className="bg-clip-text text-transparent"
               style={{ backgroundImage: 'linear-gradient(135deg, #7c3aed 0%, #d946ef 100%)' }}
             >
-              stage
+              {t('titleHighlight')}
             </span>
-            {' '}in three steps
+            {' '}{t('titleSuffix')}
           </h2>
           <p className="text-gray-500 dark:text-gray-400 text-lg max-w-sm mx-auto">
-            Simple, transparent, and protected at every step.
+            {t('subtitle')}
           </p>
         </FadeIn>
 
@@ -183,7 +169,7 @@ export function HowItWorks() {
                       <FontAwesomeIcon icon={step.icon} className="text-white" style={{ width: 15, height: 15 }} />
                     </div>
                     <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
-                      Step {parseInt(step.number)}
+                      {t('step', { number: parseInt(step.number) })}
                     </p>
                   </div>
 

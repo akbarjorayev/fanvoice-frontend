@@ -11,7 +11,9 @@ import {
   faChevronDown,
   faEnvelope,
 } from '@fortawesome/free-solid-svg-icons'
+import { useTranslations } from 'next-intl'
 import { emailSignIn, emailSignUp } from '@/lib/api'
+import { useApiErrorMessage } from '@/lib/i18n/useApiErrorMessage'
 
 interface Props {
   mode: 'signin' | 'signup'
@@ -22,6 +24,9 @@ interface Props {
 }
 
 export function EmailToggleForm({ mode, disabled, forceClose, onLoadingChange, onSuccess }: Props) {
+  const t = useTranslations('auth')
+  const tCommon = useTranslations('common')
+  const getApiErrorMessage = useApiErrorMessage()
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [email, setEmail] = useState('')
@@ -45,7 +50,7 @@ export function EmailToggleForm({ mode, disabled, forceClose, onLoadingChange, o
   }, [forceClose])
 
   function handleForgotPassword() {
-    toast.info('Coming soon! 😅 Still working on this.')
+    toast.info(t('forgotPasswordToast'))
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -54,7 +59,7 @@ export function EmailToggleForm({ mode, disabled, forceClose, onLoadingChange, o
     setCredError(false)
     if (mode === 'signup' && password !== confirm) {
       requestAnimationFrame(() => setConfirmError(true))
-      toast.error("Passwords don't match")
+      toast.error(t('passwordsDontMatch'))
       return
     }
     setLoading(true)
@@ -68,7 +73,7 @@ export function EmailToggleForm({ mode, disabled, forceClose, onLoadingChange, o
       onSuccess?.()
       router.push('/dashboard')
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Something went wrong')
+      toast.error(getApiErrorMessage(err))
       requestAnimationFrame(() => setCredError(true))
       setLoading(false)
       onLoadingChange?.(false)
@@ -93,7 +98,7 @@ export function EmailToggleForm({ mode, disabled, forceClose, onLoadingChange, o
           className="text-gray-400"
           style={{ width: 14, height: 14 }}
         />
-        {mode === 'signin' ? 'Sign in with Email' : 'Sign up with Email'}
+        {mode === 'signin' ? t('signInWithEmail') : t('signUpWithEmail')}
         <FontAwesomeIcon
           icon={faChevronDown}
           className={`text-gray-400 transition-transform duration-300 ${open ? 'rotate-180' : ''}`}
@@ -118,7 +123,7 @@ export function EmailToggleForm({ mode, disabled, forceClose, onLoadingChange, o
             autoComplete="email"
             value={email}
             onChange={(e) => { setEmail(e.target.value); setCredError(false) }}
-            placeholder="Email address"
+            placeholder={t('emailPlaceholder')}
             required
             disabled={loading}
             className={`${inputBase} ${credError ? `${errorInputClass} animate-shake` : ''}`}
@@ -131,7 +136,7 @@ export function EmailToggleForm({ mode, disabled, forceClose, onLoadingChange, o
               autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
               value={password}
               onChange={(e) => { setPassword(e.target.value); setCredError(false) }}
-              placeholder="Password"
+              placeholder={t('passwordPlaceholder')}
               required
               disabled={loading}
               className={`${inputBase} pr-11 ${credError ? `${errorInputClass} animate-shake` : ''}`}
@@ -158,7 +163,7 @@ export function EmailToggleForm({ mode, disabled, forceClose, onLoadingChange, o
               autoComplete="new-password"
               value={confirm}
               onChange={(e) => { setConfirm(e.target.value); setConfirmError(false) }}
-              placeholder="Confirm password"
+              placeholder={t('confirmPasswordPlaceholder')}
               required
               disabled={loading}
               className={`${inputBase} ${confirmError ? `${errorInputClass} animate-shake` : ''}`}
@@ -172,7 +177,7 @@ export function EmailToggleForm({ mode, disabled, forceClose, onLoadingChange, o
                 onClick={handleForgotPassword}
                 className="text-xs text-gray-400 hover:text-violet-600 dark:hover:text-violet-400 transition-colors"
               >
-                Forgot password?
+                {t('forgotPassword')}
               </button>
             </div>
           )}
@@ -187,11 +192,11 @@ export function EmailToggleForm({ mode, disabled, forceClose, onLoadingChange, o
             )}
             {loading
               ? mode === 'signup'
-                ? 'Creating account…'
-                : 'Signing in…'
+                ? t('creatingAccount')
+                : t('signingIn2')
               : mode === 'signup'
-                ? 'Create account'
-                : 'Sign in'}
+                ? t('createAccount')
+                : tCommon('signIn')}
           </button>
         </form>
         </div>

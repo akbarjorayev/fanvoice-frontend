@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { MoveRight } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { Avatar } from '@/components/ui/Avatar'
 import { YouBadge, VerifiedBadge } from '@/components/ui/UserBadges'
 
@@ -32,6 +33,7 @@ export function FanToCreatorCard({
   currentUserId,
   className = '',
 }: FanToCreatorCardProps) {
+  const t = useTranslations('fanToCreatorCard')
   return (
     <div className={`group flex items-center gap-2 sm:gap-4 p-4 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:border-violet-200 dark:hover:border-violet-800 transition-colors ${className}`}>
       {/* Fan */}
@@ -39,7 +41,7 @@ export function FanToCreatorCard({
         <Avatar name={fanName} avatarUrl={fanAvatarUrl} size={40} />
         <div className="min-w-0 text-left">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-0.5">
-            From
+            {t('from')}
           </p>
           <div className="flex items-center gap-1 min-w-0 flex-wrap">
             <Link
@@ -65,7 +67,7 @@ export function FanToCreatorCard({
         <Avatar name={creatorName} avatarUrl={creatorAvatarUrl} size={40} />
         <div className="min-w-0 text-left">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-0.5">
-            To
+            {t('to')}
           </p>
           <div className="flex items-center gap-1 min-w-0 flex-wrap">
             <Link

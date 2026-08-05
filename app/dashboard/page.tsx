@@ -1,24 +1,21 @@
 import { redirect } from 'next/navigation'
-import { Send, Inbox, Bell, Coins, Banknote } from 'lucide-react'
+import { Send, Inbox, Bell } from 'lucide-react'
+import { getTranslations } from 'next-intl/server'
 import { getMeServer, getProfileServer, getSentMessages, getReceivedMessages, getMessageCounts } from '@/lib/api.server'
 import { AppHeader } from '@/components/ui/AppHeader'
 import { MessageTabs } from '@/components/dashboard/MessageTabs'
-import { AnimatedAmount } from '@/components/dashboard/AnimatedAmount'
+import { TotalEarnedCard } from '@/components/dashboard/TotalEarnedCard'
+import { Greeting } from '@/components/dashboard/Greeting'
 import { getUserInfo } from '@/lib/user'
+import { getGreetingKey } from '@/lib/greeting'
 import { PAGE_SIZE } from '@/lib/constants'
 
 interface Props {
   searchParams: Promise<{ tab?: string; page?: string; sort?: string; read?: string; pay?: string }>
 }
 
-function getGreeting() {
-  const hour = new Date().getHours()
-  if (hour < 12) return 'Good morning'
-  if (hour < 18) return 'Good afternoon'
-  return 'Good evening'
-}
-
 export default async function DashboardPage({ searchParams }: Props) {
+  const t = await getTranslations('dashboard')
   const result = await getMeServer().catch(() => null)
   if (!result) redirect('/login?expired=1')
 
@@ -35,7 +32,7 @@ export default async function DashboardPage({ searchParams }: Props) {
 
   const [profileResult, messagesResult, countsResult] = await Promise.allSettled([
     getProfileServer(),
-    tab === 'sent' ? getSentMessages(page, PAGE_SIZE, read, pay) : getReceivedMessages(page, PAGE_SIZE, sort),
+    tab === 'sent' ? getSentMessages(page, PAGE_SIZE, read, pay) : getReceivedMessages(page, PAGE_SIZE, sort, read),
     getMessageCounts(),
   ])
 
@@ -48,7 +45,15 @@ export default async function DashboardPage({ searchParams }: Props) {
 
   const totalPages = Math.ceil(total / PAGE_SIZE)
   if (totalPages > 0 && page > totalPages) {
-    redirect(`/dashboard?tab=${tab}&page=${totalPages}&sort=${sort}`)
+    const overflowParams = new URLSearchParams({ tab, page: String(totalPages) })
+    if (tab === 'sent') {
+      if (read !== 'all') overflowParams.set('read', read)
+      if (pay !== 'all') overflowParams.set('pay', pay)
+    } else {
+      overflowParams.set('sort', sort)
+      if (read !== 'all') overflowParams.set('read', read)
+    }
+    redirect(`/dashboard?${overflowParams.toString()}`)
   }
 
   return (
@@ -58,55 +63,47 @@ export default async function DashboardPage({ searchParams }: Props) {
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
         {/* Greeting + stats */}
         <div className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-            {getGreeting()},{' '}
+            <Greeting initialKey={getGreetingKey(new Date())} />,{' '}
           <span className="bg-gradient-to-r from-blue-500 via-violet-500 to-purple-600 bg-clip-text text-transparent">
             {displayName}
           </span>
           </h1>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2.5">
-            <span className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
-              <Send size={13} className="text-violet-400 shrink-0" />
-              <strong className="text-gray-900 dark:text-white font-semibold">{counts.sent}</strong>
-              &nbsp;sent
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-2 rounded-full border border-gray-200/70 dark:border-gray-800 bg-white dark:bg-gray-900 pl-2 pr-3.5 py-1.5 shadow-sm">
+              <span className="flex items-center justify-center size-6 rounded-full bg-violet-100 dark:bg-violet-500/15 shrink-0">
+                <Send size={12} className="text-violet-500 dark:text-violet-400" />
+              </span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                <strong className="text-gray-900 dark:text-white font-semibold">{counts.sent}</strong> {t('sent')}
+              </span>
             </span>
             {isCreator && (
-              <>
-                <span className="text-gray-300 dark:text-gray-700 select-none">·</span>
-                <span className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
-                  <Inbox size={13} className="text-blue-400 shrink-0" />
-                  <strong className="text-gray-900 dark:text-white font-semibold">{counts.received}</strong>
-                  &nbsp;received
+              <span className="inline-flex items-center gap-2 rounded-full border border-gray-200/70 dark:border-gray-800 bg-white dark:bg-gray-900 pl-2 pr-3.5 py-1.5 shadow-sm">
+                <span className="flex items-center justify-center size-6 rounded-full bg-blue-100 dark:bg-blue-500/15 shrink-0">
+                  <Inbox size={12} className="text-blue-500 dark:text-blue-400" />
                 </span>
-              </>
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  <strong className="text-gray-900 dark:text-white font-semibold">{counts.received}</strong> {t('received')}
+                </span>
+              </span>
             )}
             {isCreator && counts.unread_received > 0 && (
-              <>
-                <span className="text-gray-300 dark:text-gray-700 select-none">·</span>
-                <span className="flex items-center gap-1.5 text-sm font-semibold text-amber-600 dark:text-amber-400">
-                  <Bell size={13} className="shrink-0" />
-                  {counts.unread_received} unread
+              <span className="inline-flex items-center gap-2 rounded-full border border-amber-200 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/10 pl-2 pr-3.5 py-1.5 shadow-sm">
+                <span className="flex items-center justify-center size-6 rounded-full bg-amber-100 dark:bg-amber-500/20 shrink-0">
+                  <Bell size={12} className="text-amber-600 dark:text-amber-400" />
                 </span>
-              </>
+                <span className="text-sm font-semibold text-amber-700 dark:text-amber-400">
+                  {counts.unread_received} {t('unread')}
+                </span>
+              </span>
             )}
+          </div>
           </div>
 
           {isCreator && counts.total_earned > 0 && (
-            <div className="relative mt-4 overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 dark:from-emerald-600 dark:to-teal-800 px-6 py-6 shadow-lg shadow-emerald-500/20 dark:shadow-emerald-900/30">
-              <Banknote
-                size={160}
-                strokeWidth={1.1}
-                className="absolute -bottom-8 -right-8 text-white/10 rotate-[-15deg] pointer-events-none select-none"
-              />
-              <div className="relative flex items-center gap-1.5 text-xs font-bold text-emerald-50/80 uppercase tracking-widest mb-2">
-                <Coins size={13} className="shrink-0" />
-                Total earned
-              </div>
-              <p className="relative text-4xl sm:text-5xl font-extrabold text-white tracking-tight">
-                <AnimatedAmount value={counts.total_earned} />
-                <span className="text-lg sm:text-xl font-semibold text-emerald-50/70 ml-2">so&apos;m</span>
-              </p>
-            </div>
+            <TotalEarnedCard totalEarned={counts.total_earned} />
           )}
         </div>
 

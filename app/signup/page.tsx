@@ -3,10 +3,14 @@ import Image from 'next/image'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { faTelegram } from '@fortawesome/free-brands-svg-icons'
+import { getTranslations } from 'next-intl/server'
 import { AuthProviders } from '@/components/auth/AuthProviders'
 import { SUPPORT_TELEGRAM_URL } from '@/lib/constants'
 
-export default function SignupPage() {
+export default async function SignupPage() {
+  const t = await getTranslations('signup')
+  const tAuth = await getTranslations('auth')
+  const tCommon = await getTranslations('common')
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-950 relative overflow-hidden flex items-center justify-center p-4">
       {/* Aurora */}
@@ -25,10 +29,10 @@ export default function SignupPage() {
           {/* Heading */}
           <div className="text-center mb-7">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1.5">
-              Create your account
+              {t('title')}
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-              Join FanVoice and start connecting with creators.
+              {t('subtitle')}
             </p>
           </div>
 
@@ -36,27 +40,22 @@ export default function SignupPage() {
 
           {/* Terms */}
           <p className="mt-6 text-center text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
-            By continuing you agree to our{' '}
-            <a href="/terms" className="text-violet-600 dark:text-violet-400 hover:underline">
-              Terms
-            </a>{' '}
-            and{' '}
-            <a href="/privacy" className="text-violet-600 dark:text-violet-400 hover:underline">
-              Privacy Policy
-            </a>
-            .
+            {tAuth.rich('byContinuing', {
+              terms: (chunks) => <a href="/terms" className="text-violet-600 dark:text-violet-400 hover:underline">{chunks}</a>,
+              privacy: (chunks) => <a href="/privacy" className="text-violet-600 dark:text-violet-400 hover:underline">{chunks}</a>,
+            })}
           </p>
         </div>
 
         {/* Footer links */}
         <div className="mt-5 flex items-center justify-center gap-5">
           <span className="text-sm text-gray-400 dark:text-gray-500">
-            Have an account?{' '}
+            {t('haveAccount')}{' '}
             <Link
               href="/login"
               className="text-violet-600 dark:text-violet-400 font-medium hover:underline"
             >
-              Sign in
+              {t('signIn')}
             </Link>
           </span>
           <span className="w-px h-4 bg-gray-200 dark:bg-gray-800" />
@@ -67,7 +66,7 @@ export default function SignupPage() {
             className="inline-flex items-center gap-1.5 text-sm text-gray-400 dark:text-gray-500 hover:text-sky-500 dark:hover:text-sky-400 transition-colors"
           >
             <FontAwesomeIcon icon={faTelegram} style={{ width: 13, height: 13 }} />
-            Support
+            {tCommon('support')}
           </a>
           <span className="w-px h-4 bg-gray-200 dark:bg-gray-800" />
           <Link
@@ -75,7 +74,7 @@ export default function SignupPage() {
             className="inline-flex items-center gap-1.5 text-sm text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
           >
             <FontAwesomeIcon icon={faArrowLeft} style={{ width: 12, height: 12 }} />
-            Home
+            {tCommon('home')}
           </Link>
         </div>
       </div>

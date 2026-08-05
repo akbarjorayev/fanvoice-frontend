@@ -1,4 +1,4 @@
-export const PLATFORM_FEE = 0.10
+export const PLATFORM_FEE = 0.20
 export const CREATOR_SHARE = 1 - PLATFORM_FEE
 export const PLATFORM_FEE_PCT = Math.round(PLATFORM_FEE * 100)
 export const CREATOR_SHARE_PCT = Math.round(CREATOR_SHARE * 100)

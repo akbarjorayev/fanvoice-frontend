@@ -19,12 +19,14 @@ function getFocusable(container: HTMLElement | null): HTMLElement[] {
 interface DialogProps {
   open: boolean
   onClose: () => void
+  /** Called on Escape instead of onClose, e.g. to step back to a parent view rather than closing entirely. Defaults to onClose. */
+  onEscape?: () => void
   title?: string
   description?: string
   children: React.ReactNode
 }
 
-export function Dialog({ open, onClose, title, description, children }: DialogProps) {
+export function Dialog({ open, onClose, onEscape, title, description, children }: DialogProps) {
   const panelRef = useRef<HTMLDivElement>(null)
   const [mounted, setMounted] = useState(open)
   const [closing, setClosing] = useState(false)
@@ -60,7 +62,7 @@ export function Dialog({ open, onClose, title, description, children }: DialogPr
 
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') {
-        onClose()
+        (onEscape ?? onClose)()
         return
       }
       if (e.key !== 'Tab') return
@@ -92,7 +94,7 @@ export function Dialog({ open, onClose, title, description, children }: DialogPr
       document.body.style.overflow = ''
       trigger?.focus?.()
     }
-  }, [open, onClose])
+  }, [open, onClose, onEscape])
 
   // Auto-focus first input when opened
   useEffect(() => {

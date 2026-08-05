@@ -1,64 +1,23 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faStar } from '@fortawesome/free-solid-svg-icons'
+import { useTranslations } from 'next-intl'
 import { FadeIn } from './FadeIn'
 import { Tilt3D } from './Tilt3D'
 
-const testimonials = [
-  {
-    quote: "My daughter's favorite streamer read her name live in front of 20,000 people. She was shaking. I've never seen her that happy. Worth every penny.",
-    name: 'Sarah M.',
-    role: 'Fan from London',
-    initial: 'S',
-    from: 'from-pink-400',
-    to: 'to-rose-500',
-    accent: '#f43f5e',
-  },
-  {
-    quote: "FanVoice changed how I connect with my community. The escrow system means fans actually trust me, and I get fair payment for the time I spend. It's a win-win.",
-    name: 'Alex K.',
-    role: 'Content Creator · 24K fans',
-    initial: 'A',
-    from: 'from-violet-500',
-    to: 'to-purple-600',
-    accent: '#7c3aed',
-  },
-  {
-    quote: "I've tried other platforms and always got burned. FanVoice is the only one where my money is protected. My message went out within a week.",
-    name: 'Omar R.',
-    role: 'Fan from UAE',
-    initial: 'O',
-    from: 'from-blue-400',
-    to: 'to-indigo-600',
-    accent: '#3b82f6',
-  },
-  {
-    quote: "I sent a birthday message to my favorite blogger and she responded with a personal voice note. It felt like talking to a real friend. Absolutely magical.",
-    name: 'Kamola T.',
-    role: 'Fan from Tashkent',
-    initial: 'K',
-    from: 'from-emerald-400',
-    to: 'to-teal-600',
-    accent: '#10b981',
-  },
-  {
-    quote: "Before FanVoice I'd spend hours on DMs that never got answered. Now I know my message will land. Worth every so'm.",
-    name: 'Jasur N.',
-    role: 'Fan from Samarkand',
-    initial: 'J',
-    from: 'from-amber-400',
-    to: 'to-orange-500',
-    accent: '#f59e0b',
-  },
-  {
-    quote: "The escrow model is brilliant. My audience doubled after they realized their money is safe. More fans reach out now than ever.",
-    name: 'Nina P.',
-    role: 'Illustrator · 12K followers',
-    initial: 'N',
-    from: 'from-cyan-400',
-    to: 'to-sky-600',
-    accent: '#06b6d4',
-  },
-]
+const testimonialStyles = [
+  { initial: 'S', from: 'from-pink-400', to: 'to-rose-500', accent: '#f43f5e' },
+  { initial: 'A', from: 'from-violet-500', to: 'to-purple-600', accent: '#7c3aed' },
+  { initial: 'O', from: 'from-blue-400', to: 'to-indigo-600', accent: '#3b82f6' },
+  { initial: 'K', from: 'from-emerald-400', to: 'to-teal-600', accent: '#10b981' },
+  { initial: 'J', from: 'from-amber-400', to: 'to-orange-500', accent: '#f59e0b' },
+  { initial: 'N', from: 'from-cyan-400', to: 'to-sky-600', accent: '#06b6d4' },
+] as const
+
+interface TestimonialItem {
+  quote: string
+  name: string
+  role: string
+}
 
 function Stars() {
   return (
@@ -71,6 +30,9 @@ function Stars() {
 }
 
 export function Testimonials() {
+  const t = useTranslations('testimonials')
+  const items = t.raw('items') as TestimonialItem[]
+  const testimonials = items.map((item, i) => ({ ...item, ...testimonialStyles[i] }))
   const [featured, ...rest] = testimonials
 
   return (
@@ -86,15 +48,15 @@ export function Testimonials() {
       <div className="max-w-5xl mx-auto relative">
         <FadeIn className="text-center mb-16">
           <p className="text-violet-600 dark:text-violet-400 text-xs font-semibold tracking-[0.2em] uppercase mb-4">
-            Real stories
+            {t('eyebrow')}
           </p>
           <h2 className="text-3xl md:text-5xl font-black text-gray-900 dark:text-white leading-tight">
-            Moments that{' '}
+            {t('titlePrefix')}{' '}
             <span
               className="bg-clip-text text-transparent"
               style={{ backgroundImage: 'linear-gradient(135deg, #7c3aed 0%, #d946ef 100%)' }}
             >
-              matter
+              {t('titleHighlight')}
             </span>
           </h2>
         </FadeIn>
@@ -113,7 +75,7 @@ export function Testimonials() {
               />
 
               <div className="absolute top-6 right-6 inline-flex items-center gap-1.5 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-600 dark:text-amber-400 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">
-                ✦ Featured
+                ✦ {t('featured')}
               </div>
 
               <Stars />

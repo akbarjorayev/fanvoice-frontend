@@ -5,32 +5,26 @@ import {
   faArrowsRotate,
   faCheck,
 } from '@fortawesome/free-solid-svg-icons'
+import { useTranslations } from 'next-intl'
 import { FadeIn } from './FadeIn'
 import { Tilt3D } from './Tilt3D'
 import { CREATOR_SHARE_PCT, PLATFORM_FEE_PCT } from '@/lib/fees'
 
-const trustPoints = [
-  {
-    icon: faShield,
-    label: 'Escrow protection',
-    detail: 'Payment held securely until delivery is confirmed',
-    color: 'from-violet-500 to-purple-600',
-  },
-  {
-    icon: faClock,
-    label: 'Creator reads aloud',
-    detail: 'On stream, in a video, or a personal shoutout — verified by voice',
-    color: 'from-blue-500 to-indigo-600',
-  },
-  {
-    icon: faArrowsRotate,
-    label: 'Instant payout on delivery',
-    detail: `Creator receives ${CREATOR_SHARE_PCT}% the moment they deliver your message`,
-    color: 'from-emerald-500 to-teal-600',
-  },
-]
+const trustPointMeta = [
+  { key: 'escrow', icon: faShield, color: 'from-violet-500 to-purple-600' },
+  { key: 'reads', icon: faClock, color: 'from-blue-500 to-indigo-600' },
+  { key: 'instant', icon: faArrowsRotate, color: 'from-emerald-500 to-teal-600' },
+] as const
 
 export function Guarantee() {
+  const t = useTranslations('guarantee')
+  const trustPoints = trustPointMeta.map((meta) => ({
+    ...meta,
+    label: t(`points.${meta.key}.label`),
+    detail: meta.key === 'instant'
+      ? t('points.instant.detail', { pct: CREATOR_SHARE_PCT })
+      : t(`points.${meta.key}.detail`),
+  }))
   return (
     <section className="relative py-28 bg-white dark:bg-gray-950 px-6 overflow-hidden">
       <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-white/[0.06] to-transparent" />
@@ -47,13 +41,13 @@ export function Guarantee() {
           <FadeIn>
             <div className="inline-flex items-center gap-2 bg-violet-50 dark:bg-violet-950/60 text-violet-700 dark:text-violet-300 text-xs font-semibold px-3 py-1.5 rounded-full mb-6 border border-violet-100 dark:border-violet-800/50">
               <FontAwesomeIcon icon={faShield} style={{ width: 11, height: 11 }} />
-              The FanVoice Guarantee
+              {t('badge')}
             </div>
 
             <h2 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white mb-5 leading-tight">
-              No read,{' '}
+              {t('titleLine1Prefix')}{' '}
               <span className="relative inline-block">
-                no payout.
+                {t('titleLine1Highlight')}
                 <span
                   aria-hidden
                   className="absolute -bottom-1 left-0 right-0 h-[3px] rounded-full"
@@ -61,18 +55,16 @@ export function Guarantee() {
                 />
               </span>
               <br />
-              Simple as that.
+              {t('titleLine2')}
             </h2>
 
             <p className="text-gray-500 dark:text-gray-400 text-base leading-relaxed mb-7">
-              We hold your payment in escrow. The creator doesn&apos;t receive a single cent
-              until they&apos;ve read your message aloud. Only after delivery does the
-              payout go through — automatically.
+              {t('description')}
             </p>
 
-            {/* 90% split visualizer */}
+            {/* Split visualizer */}
             <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-white/[0.07] rounded-xl p-5 mb-8">
-              <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">Where your money goes</p>
+              <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">{t('whereMoneyGoes')}</p>
               <div className="flex gap-0.5 h-3 rounded-full overflow-hidden mb-3">
                 <div
                   className="bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full flex items-center justify-center"
@@ -82,12 +74,12 @@ export function Guarantee() {
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-black text-violet-600 dark:text-violet-400">{CREATOR_SHARE_PCT}% → Creator</p>
-                  <p className="text-xs text-gray-400">of what you pay</p>
+                  <p className="text-sm font-black text-violet-600 dark:text-violet-400">{t('creatorShare', { pct: CREATOR_SHARE_PCT })}</p>
+                  <p className="text-xs text-gray-400">{t('ofWhatYouPay')}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-bold text-gray-400 dark:text-gray-500">{PLATFORM_FEE_PCT}% → Platform</p>
-                  <p className="text-xs text-gray-400">that&apos;s all we take</p>
+                  <p className="text-sm font-bold text-gray-400 dark:text-gray-500">{t('platformShare', { pct: PLATFORM_FEE_PCT })}</p>
+                  <p className="text-xs text-gray-400">{t('thatsAllWeTake')}</p>
                 </div>
               </div>
             </div>
@@ -118,15 +110,15 @@ export function Guarantee() {
                 />
 
                 <p className="text-[11px] font-bold text-gray-400 dark:text-gray-500 tracking-widest uppercase mb-2 relative">
-                  How escrow works
+                  {t('flowTitle')}
                 </p>
                 <div className="h-px bg-gray-200 dark:bg-white/[0.06] mb-5" />
 
                 <div className="space-y-1 relative">
                   {[
-                    { label: 'Fan pays — held in escrow', sub: 'Money is locked until delivery', icon: faCheck, green: true },
-                    { label: 'Creator reads aloud', sub: 'On stream, in a video, or a shoutout', icon: faCheck, green: true },
-                    { label: `Creator receives ${CREATOR_SHARE_PCT}%`, sub: `Platform keeps ${PLATFORM_FEE_PCT}% — released instantly`, icon: faCheck, green: true },
+                    { label: t('flow.pay.label'), sub: t('flow.pay.sub'), icon: faCheck, green: true },
+                    { label: t('flow.read.label'), sub: t('flow.read.sub'), icon: faCheck, green: true },
+                    { label: t('flow.payout.label', { pct: CREATOR_SHARE_PCT }), sub: t('flow.payout.sub', { feePct: PLATFORM_FEE_PCT }), icon: faCheck, green: true },
                   ].map((item, i) => (
                     <div key={item.label}>
                       <div className="flex items-center gap-4 py-3">

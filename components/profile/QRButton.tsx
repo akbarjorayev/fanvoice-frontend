@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { QrCode } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { QRDialog } from './QRDialog'
 
 interface Props {
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export function QRButton({ username }: Props) {
+  const t = useTranslations('profile')
   const [open, setOpen] = useState(false)
 
   return (
@@ -16,7 +18,7 @@ export function QRButton({ username }: Props) {
       <button
         onClick={() => setOpen(true)}
         className="inline-flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:px-4 sm:py-2 sm:gap-2 rounded-full border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-900 text-sm font-semibold hover:border-violet-400 hover:text-violet-600 dark:hover:text-violet-400 shadow-sm transition-colors"
-        title="Show QR code"
+        title={t('showQrCode')}
       >
         <QrCode size={15} />
         <span className="hidden sm:inline">QR</span>

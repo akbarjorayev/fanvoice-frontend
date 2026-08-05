@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowRight } from '@fortawesome/free-solid-svg-icons'
+import { useTranslations } from 'next-intl'
 import { CREATOR_SHARE_PCT } from '@/lib/fees'
 
 const connections = [
@@ -31,14 +32,15 @@ const connections = [
 ]
 
 function NetworkFlow() {
+  const t = useTranslations('hero')
   return (
     <div className="w-full max-w-2xl mx-auto">
 
       {/* Desktop: multi-row live network */}
       <div className="hidden sm:block space-y-2.5">
         <div className="flex items-center justify-between px-1 mb-3">
-          <span className="text-[10px] font-bold text-gray-400 dark:text-gray-600 uppercase tracking-[0.18em]">Fans</span>
-          <span className="text-[10px] font-bold text-gray-400 dark:text-gray-600 uppercase tracking-[0.18em]">Creators</span>
+          <span className="text-[10px] font-bold text-gray-400 dark:text-gray-600 uppercase tracking-[0.18em]">{t('fansLabel')}</span>
+          <span className="text-[10px] font-bold text-gray-400 dark:text-gray-600 uppercase tracking-[0.18em]">{t('creatorsLabel')}</span>
         </div>
 
         {connections.map((conn, i) => (
@@ -71,7 +73,7 @@ function NetworkFlow() {
               {conn.creator.live && (
                 <div className="flex items-center gap-0.5 bg-red-500 rounded-full px-1.5 py-0.5">
                   <span className="w-1 h-1 rounded-full bg-white animate-pulse" />
-                  <span className="text-[8px] font-bold text-white uppercase tracking-wide">Live</span>
+                  <span className="text-[8px] font-bold text-white uppercase tracking-wide">{t('live')}</span>
                 </div>
               )}
             </div>
@@ -126,6 +128,7 @@ function FloatingParticles() {
 }
 
 export function Hero() {
+  const t = useTranslations('hero')
   return (
     <section className="relative min-h-screen bg-white dark:bg-gray-950 flex flex-col items-center justify-center overflow-hidden pt-24 pb-20 px-6">
 
@@ -160,20 +163,19 @@ export function Hero() {
 
         {/* Headline */}
         <h1 className="animate-fade-up anim-delay-100 text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-black leading-[0.9] tracking-tight mb-6">
-          <span className="text-gray-900 dark:text-white">Your message,</span>
+          <span className="text-gray-900 dark:text-white">{t('headlineLine1')}</span>
           <br />
           <span
             className="bg-clip-text text-transparent"
             style={{ backgroundImage: 'linear-gradient(135deg, #7c3aed 0%, #d946ef 55%, #4f46e5 100%)' }}
           >
-            their voice.
+            {t('headlineLine2')}
           </span>
         </h1>
 
         {/* Subtext */}
         <p className="animate-fade-up anim-delay-200 text-lg md:text-xl text-gray-500 dark:text-gray-400 max-w-lg mb-10 leading-relaxed">
-          Pay your favorite creator to read your message aloud — to their audience, on stream, in a video.
-          They only get paid when they deliver.
+          {t('subtext')}
         </p>
 
         {/* CTAs */}
@@ -182,7 +184,7 @@ export function Hero() {
             href="/login"
             className="group inline-flex items-center gap-2 px-7 py-3.5 bg-violet-600 text-white text-sm font-semibold rounded-full hover:bg-violet-500 transition-all shadow-xl shadow-violet-600/30 w-full sm:w-auto justify-center"
           >
-            Send a message
+            {t('sendMessage')}
             <FontAwesomeIcon
               icon={faArrowRight}
               style={{ width: 13, height: 13 }}
@@ -193,7 +195,7 @@ export function Hero() {
             href="/signup"
             className="inline-flex items-center justify-center px-7 py-3.5 text-sm font-semibold text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-white/10 rounded-full hover:border-violet-300 dark:hover:border-violet-700 hover:text-violet-600 dark:hover:text-violet-400 transition-all w-full sm:w-auto"
           >
-            Become a creator
+            {t('becomeCreator')}
           </Link>
         </div>
 
@@ -206,12 +208,12 @@ export function Hero() {
         <div className="animate-fade-up anim-delay-500 flex flex-wrap items-center justify-center gap-5">
           <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
             <span className="text-violet-600 dark:text-violet-400 font-black">{CREATOR_SHARE_PCT}%</span>
-            of your payment goes to the creator
+            {t('shareGoesTo')}
           </div>
           <span className="w-px h-5 bg-gray-200 dark:bg-gray-800 hidden sm:block" />
           <div className="flex items-center gap-2 text-sm">
-            <span className="font-semibold text-gray-700 dark:text-gray-300">Uzum Bank</span>
-            <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded-full">+ more coming</span>
+            <span className="font-semibold text-gray-700 dark:text-gray-300">{t('uzumBank')}</span>
+            <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded-full">{t('moreComing')}</span>
           </div>
         </div>
       </div>

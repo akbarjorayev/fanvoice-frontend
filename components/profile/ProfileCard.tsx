@@ -7,10 +7,12 @@ import {
   PenLine, Mail, Calendar, BadgeCheck, LogOut, LinkIcon,
   Share2, KeyRound, QrCode, Sparkles, AlertCircle, Coins,
 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { SocialLinks } from './SocialLinks'
 import { Avatar } from '@/components/ui/Avatar'
 import { CreatorBadge } from '@/components/ui/UserBadges'
 import { formatPrice } from '@/lib/fees'
+import { formatLongMonthYear, type DateNames } from '@/lib/i18n/formatDate'
 import type { User } from '@/types/user'
 import type { SocialLink } from '@/types/social-link'
 
@@ -32,6 +34,15 @@ interface Props {
 
 
 export function ProfileCard({ user, links }: Props) {
+  const t = useTranslations('profile')
+  const tCommon = useTranslations('common')
+  const tDates = useTranslations('dates')
+  const dateNames: DateNames = {
+    monthsShort: tDates.raw('monthsShort'),
+    monthsLong: tDates.raw('monthsLong'),
+    monthsLongGenitive: tDates.raw('monthsLongGenitive'),
+    weekdaysShort: tDates.raw('weekdaysShort'),
+  }
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -61,10 +72,9 @@ export function ProfileCard({ user, links }: Props) {
   const price = user.creator_min_price ?? 0
   const profileIncomplete = isCreator && (!bio || price === 0)
 
-  const fmt = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' })
-  const memberSince = fmt.format(new Date(user.created_at))
-  const creatorSince = user.creator_since ? fmt.format(new Date(user.creator_since)) : null
-  const verifiedSince = user.creator_verified_at ? fmt.format(new Date(user.creator_verified_at)) : null
+  const memberSince = formatLongMonthYear(new Date(user.created_at), dateNames)
+  const creatorSince = user.creator_since ? formatLongMonthYear(new Date(user.creator_since), dateNames) : null
+  const verifiedSince = user.creator_verified_at ? formatLongMonthYear(new Date(user.creator_verified_at), dateNames) : null
 
   return (
     <>
@@ -91,7 +101,7 @@ export function ProfileCard({ user, links }: Props) {
             <div className="mb-2 flex items-center gap-2">
               <button
                 onClick={() => setQrOpen(true)}
-                title="Show QR code"
+                title={t('showQrCode')}
                 className="inline-flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:px-4 sm:py-2 sm:gap-2 rounded-full border border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:border-violet-400 hover:text-violet-600 dark:hover:text-violet-400 bg-white dark:bg-gray-900 shadow-sm transition-colors"
               >
                 <QrCode size={14} />
@@ -102,14 +112,14 @@ export function ProfileCard({ user, links }: Props) {
                 className="inline-flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:px-4 sm:py-2 sm:gap-2 rounded-full border border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:border-violet-400 hover:text-violet-600 dark:hover:text-violet-400 bg-white dark:bg-gray-900 shadow-sm transition-colors"
               >
                 <Share2 size={14} />
-                <span className="hidden sm:inline">Share</span>
+                <span className="hidden sm:inline">{tCommon('share')}</span>
               </button>
               <button
                 onClick={() => setEditOpen(true)}
                 className="inline-flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:px-4 sm:py-2 sm:gap-2 rounded-full border border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:border-violet-400 hover:text-violet-600 dark:hover:text-violet-400 bg-white dark:bg-gray-900 shadow-sm transition-colors"
               >
                 <PenLine size={14} />
-                <span className="hidden sm:inline">Edit profile</span>
+                <span className="hidden sm:inline">{t('editProfile')}</span>
               </button>
             </div>
           </div>
@@ -123,7 +133,7 @@ export function ProfileCard({ user, links }: Props) {
             </div>
             {user.username
               ? <p className="text-gray-400 dark:text-gray-500 mt-1">@{user.username}</p>
-              : <p className="text-sm italic text-gray-300 dark:text-gray-600 mt-1">No username set</p>}
+              : <p className="text-sm italic text-gray-300 dark:text-gray-600 mt-1">{t('noUsernameSet')}</p>}
           </div>
 
           {/* ── Creator section ───────────────────────────────── */}
@@ -136,14 +146,14 @@ export function ProfileCard({ user, links }: Props) {
                   <AlertCircle size={15} className="text-amber-500 shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">
-                      Complete your creator profile
+                      {t('completeYourProfile')}
                     </p>
                     <p className="text-xs text-amber-600 dark:text-amber-500 mt-0.5 leading-relaxed">
                       {!bio && price === 0
-                        ? 'Add a bio and set your minimum message price so fans know what to expect.'
+                        ? t('completeProfileBoth')
                         : !bio
-                          ? 'Add a bio to introduce yourself to your fans.'
-                          : 'Set a minimum message price for fan messages.'}
+                          ? t('completeProfileBio')
+                          : t('completeProfilePrice')}
                     </p>
                   </div>
                 </div>
@@ -151,44 +161,44 @@ export function ProfileCard({ user, links }: Props) {
 
               {/* Bio — read-only, edit via Edit profile */}
               <div className="rounded-2xl border border-gray-100 dark:border-white/[0.07] bg-white dark:bg-white/[0.03] p-4">
-                <p className="text-xs font-medium text-gray-400 dark:text-gray-500 mb-2.5">Bio</p>
+                <p className="text-xs font-medium text-gray-400 dark:text-gray-500 mb-2.5">{t('bio')}</p>
                 {bio
                   ? <pre className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed font-sans whitespace-pre-wrap">{bio}</pre>
-                  : <p className="text-sm italic text-gray-300 dark:text-gray-600">No bio yet — add one in Edit profile</p>}
+                  : <p className="text-sm italic text-gray-300 dark:text-gray-600">{t('noBioYet')}</p>}
               </div>
 
               {/* Min price — read-only, edit via Edit profile */}
               <div className="rounded-2xl border border-gray-100 dark:border-white/[0.07] bg-white dark:bg-white/[0.03] px-4 py-3.5">
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs font-medium text-gray-400 dark:text-gray-500">Min price per message</p>
+                  <p className="text-xs font-medium text-gray-400 dark:text-gray-500">{t('minPricePerMessage')}</p>
                   <button
                     onClick={() => { setEditFocusPrice(true); setEditOpen(true) }}
                     className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:text-violet-600 dark:hover:text-violet-400 hover:border-violet-300 dark:hover:border-violet-500/50 transition-colors"
                   >
                     <Coins size={11} />
-                    {price > 0 ? 'Edit' : 'Set price'}
+                    {price > 0 ? tCommon('edit') : t('setPrice')}
                   </button>
                 </div>
                 {price > 0
                   ? <p className="text-sm text-gray-700 dark:text-gray-200">{formatPrice(price)} so&apos;m</p>
-                  : <p className="text-sm italic text-gray-300 dark:text-gray-600">No minimum set</p>}
+                  : <p className="text-sm italic text-gray-300 dark:text-gray-600">{t('noMinimumSet')}</p>}
               </div>
 
               {/* Social links */}
               <div className="rounded-2xl border border-gray-100 dark:border-white/[0.07] bg-white dark:bg-white/[0.03] px-4 py-3.5">
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs font-medium text-gray-400 dark:text-gray-500">Social links</p>
+                  <p className="text-xs font-medium text-gray-400 dark:text-gray-500">{t('socialLinks')}</p>
                   <button
                     onClick={() => setLinksOpen(true)}
                     className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:text-violet-600 dark:hover:text-violet-400 hover:border-violet-300 dark:hover:border-violet-500/50 transition-colors"
                   >
                     <LinkIcon size={11} />
-                    {links.length === 0 ? 'Add' : 'Manage'}
+                    {links.length === 0 ? tCommon('add') : tCommon('manage')}
                   </button>
                 </div>
                 {links.length > 0
                   ? <SocialLinks links={links} />
-                  : <p className="text-sm italic text-gray-300 dark:text-gray-600">No links yet</p>}
+                  : <p className="text-sm italic text-gray-300 dark:text-gray-600">{t('noLinksYet')}</p>}
               </div>
 
             </div>
@@ -211,18 +221,18 @@ export function ProfileCard({ user, links }: Props) {
             </div>
             <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
               <Calendar size={15} className="flex-shrink-0 text-gray-400 dark:text-gray-500" />
-              <span>Member since {memberSince}</span>
+              <span>{t('memberSince', { date: memberSince })}</span>
             </div>
             {isCreator && creatorSince && (
               <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
                 <Sparkles size={15} className="flex-shrink-0 text-violet-400 dark:text-violet-500" />
-                <span>Creator since {creatorSince}</span>
+                <span>{t('creatorSince', { date: creatorSince })}</span>
               </div>
             )}
             {verifiedSince && (
               <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
                 <BadgeCheck size={15} className="flex-shrink-0 text-blue-500" />
-                <span>Verified since {verifiedSince}</span>
+                <span>{t('verifiedSince', { date: verifiedSince })}</span>
               </div>
             )}
           </div>
@@ -232,13 +242,13 @@ export function ProfileCard({ user, links }: Props) {
             <div className="mb-4 flex items-center justify-between px-4 py-3.5 rounded-2xl border border-violet-100 dark:border-violet-500/20 bg-violet-50/60 dark:bg-violet-500/[0.06]">
               <div className="flex items-center gap-2">
                 <Sparkles size={15} className="text-violet-500 dark:text-violet-400 shrink-0" />
-                <span className="text-sm font-semibold text-violet-700 dark:text-violet-300">Become a Creator</span>
+                <span className="text-sm font-semibold text-violet-700 dark:text-violet-300">{t('becomeCreator')}</span>
               </div>
               <button
                 onClick={() => setCreatorOpen(true)}
-                className="text-xs font-semibold text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors"
+                className="px-3 py-1.5 rounded-full bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold transition-colors"
               >
-                Get started →
+                {t('getStarted')}
               </button>
             </div>
           )}
@@ -248,13 +258,13 @@ export function ProfileCard({ user, links }: Props) {
             <div className="mb-8 flex items-center justify-between px-4 py-3.5 rounded-2xl border border-gray-100 dark:border-white/[0.07] bg-white dark:bg-white/[0.03]">
               <div className="flex items-center gap-2">
                 <BadgeCheck size={15} className="text-blue-500 shrink-0" />
-                <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">Get Verified</span>
+                <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">{t('getVerified')}</span>
               </div>
               <button
                 onClick={() => setVerifyOpen(true)}
-                className="text-xs font-semibold text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 transition-colors"
+                className="px-3 py-1.5 rounded-full bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold transition-colors"
               >
-                Apply →
+                {t('apply')}
               </button>
             </div>
           )}
@@ -267,7 +277,7 @@ export function ProfileCard({ user, links }: Props) {
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:text-violet-600 dark:hover:text-violet-400 hover:border-violet-300 dark:hover:border-violet-500/50 transition-colors"
               >
                 <KeyRound size={14} />
-                Change password
+                {t('changePassword')}
               </button>
             )}
             <button
@@ -275,7 +285,7 @@ export function ProfileCard({ user, links }: Props) {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:text-red-500 dark:hover:text-red-400 hover:border-red-300 dark:hover:border-red-500/50 transition-colors"
             >
               <LogOut size={14} />
-              Sign out
+              {tCommon('signOut')}
             </button>
           </div>
 

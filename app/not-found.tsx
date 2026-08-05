@@ -1,7 +1,9 @@
 import Link from 'next/link'
 import { Home } from 'lucide-react'
+import { getTranslations } from 'next-intl/server'
 
-export default function NotFound() {
+export default async function NotFound() {
+  const t = await getTranslations('notFound')
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col items-center justify-center px-6">
       <style>{`
@@ -39,11 +41,11 @@ export default function NotFound() {
         <div className="fade mt-2 mb-4 h-px w-16 bg-gradient-to-r from-transparent via-violet-400 to-transparent" style={{ animationDelay: '0.5s' }} />
 
         <h1 className="fade text-2xl font-bold text-gray-900 dark:text-white" style={{ animationDelay: '0.55s' }}>
-          Page not found
+          {t('title')}
         </h1>
 
         <p className="fade mt-2 text-sm text-gray-500 dark:text-gray-400 leading-relaxed" style={{ animationDelay: '0.6s' }}>
-          The page you&apos;re looking for doesn&apos;t exist or has been moved.
+          {t('description')}
         </p>
 
         <div className="fade mt-8" style={{ animationDelay: '0.65s' }}>
@@ -52,7 +54,7 @@ export default function NotFound() {
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition-colors"
           >
             <Home size={14} />
-            Go home
+            {t('goHome')}
           </Link>
         </div>
       </div>

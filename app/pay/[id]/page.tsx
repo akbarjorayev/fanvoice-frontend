@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { ArrowLeft, Coins } from 'lucide-react'
+import { getTranslations } from 'next-intl/server'
 import { getMeServer, getMessage } from '@/lib/api.server'
 import { AppHeader, navBtnClass } from '@/components/ui/AppHeader'
 import { PayButton } from './PayButton'
@@ -15,6 +16,7 @@ interface Props {
 
 export default async function PayPage({ params }: Props) {
   const { id } = await params
+  const t = await getTranslations('payPage')
   const [meResult, result] = await Promise.all([
     getMeServer().catch(() => null),
     getMessage(id).catch(() => null),
@@ -31,13 +33,13 @@ export default async function PayPage({ params }: Props) {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950">
       <AppHeader
-        left={<Link href={`/message/${id}`} className={navBtnClass}><ArrowLeft size={14} />Back to message</Link>}
+        left={<Link href={`/message/${id}`} className={navBtnClass}><ArrowLeft size={14} />{t('backToMessage')}</Link>}
         user={getUserInfo(meResult.user)}
       />
 
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-16 flex flex-col items-center text-center gap-8">
         {/* Icon */}
-        <div className="w-16 h-16 rounded-2xl bg-violet-100 dark:bg-violet-500/20 flex items-center justify-center">
+        <div className="w-16 h-16 rounded-full bg-violet-100 dark:bg-violet-500/20 flex items-center justify-center">
           <Coins size={28} className="text-violet-600 dark:text-violet-400" />
         </div>
 
@@ -67,10 +69,10 @@ export default async function PayPage({ params }: Props) {
           {/* Glow blobs */}
           <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/10 blur-3xl pointer-events-none" />
           <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-fuchsia-400/20 blur-3xl pointer-events-none" />
-          <PriceInfoButton price={msg.price} creatorName={msg.creator_name} creatorVerified={msg.creator_verified} />
+          <PriceInfoButton price={msg.price} creatorEarning={msg.creator_earning} creatorName={msg.creator_name} creatorVerified={msg.creator_verified} />
 
           <p className="relative text-xs font-semibold uppercase tracking-widest text-violet-200/70">
-            Total to pay
+            {t('totalToPay')}
           </p>
 
           <div className="relative flex items-baseline gap-3">

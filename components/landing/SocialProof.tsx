@@ -1,20 +1,9 @@
-const row1 = [
-  { text: '"Said hi to my daughter live — she cried happy tears!"', author: '@sofia_mom' },
-  { text: '"10,000 people heard my name on stream. Unreal."', author: '@gamer_lev' },
-  { text: '"Best birthday gift I\'ve ever given anyone."', author: '@birthday_hero' },
-  { text: '"He actually remembered my message 3 weeks later."', author: '@true_fan99' },
-  { text: '"Worth every penny. Incredible experience."', author: '@omar_r' },
-  { text: '"My kids screamed when their favorite YouTuber said hi."', author: '@dad_of_3' },
-]
+import { useTranslations } from 'next-intl'
 
-const row2 = [
-  { text: '"First time I felt truly seen by a creator."', author: '@quiet_watcher' },
-  { text: '"She read it word for word. I was shaking."', author: '@melody_k' },
-  { text: '"Never thought it would actually work. It did."', author: '@skeptic_turned_fan' },
-  { text: '"The guarantee made me trust it. And it delivered."', author: '@aisha_r' },
-  { text: '"My message got read in front of 50K viewers."', author: '@legend_fan' },
-  { text: '"Sent it for my husband\'s birthday. He loved it."', author: '@loving_wife' },
-]
+interface QuoteItem {
+  text: string
+  author: string
+}
 
 function MessagePill({ text, author }: { text: string; author: string }) {
   return (
@@ -26,6 +15,9 @@ function MessagePill({ text, author }: { text: string; author: string }) {
 }
 
 export function SocialProof() {
+  const t = useTranslations('socialProof')
+  const row1 = t.raw('row1') as QuoteItem[]
+  const row2 = t.raw('row2') as QuoteItem[]
   return (
     <section className="relative py-16 bg-gray-50 dark:bg-gray-950 overflow-hidden">
       <div aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-white/[0.08] to-transparent" />
@@ -38,7 +30,7 @@ export function SocialProof() {
       />
 
       <p className="text-center text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] mb-10">
-        What fans are saying
+        {t('eyebrow')}
       </p>
 
       {/* Row 1 */}

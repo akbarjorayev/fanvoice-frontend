@@ -6,6 +6,26 @@
   :root {
     color-scheme: light dark;
   }
+
+  /* The native focus outline doesn't reliably follow a rounded-full
+     element's shape across browsers, so replace it with a box-shadow ring —
+     box-shadow always conforms to the element's own border-radius. Anything
+     with its own focus-visible:ring-* utility (e.g. error-state red rings)
+     still wins, since Tailwind's utility layer outranks this base layer.
+     Two-tone: a solid gap (matching the page background) for breathing room,
+     then a crisp violet ring outside it. border-radius forces full rounding
+     even on elements that aren't rounded-full themselves. */
+  :focus-visible {
+    outline: none;
+    border-radius: 9999px;
+    box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(139, 92, 246, 0.7);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :focus-visible {
+    box-shadow: 0 0 0 2px #030712, 0 0 0 4px rgba(139, 92, 246, 0.7);
+  }
 }
 
 @keyframes marquee {

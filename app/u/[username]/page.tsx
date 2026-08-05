@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { BadgeCheck, Calendar, MessageCircle, Sparkles } from 'lucide-react'
+import { getTranslations } from 'next-intl/server'
 import { getPublicProfile, getMeServer } from '@/lib/api.server'
 import { AppHeader } from '@/components/ui/AppHeader'
 import { SocialLinks } from '@/components/profile/SocialLinks'
@@ -9,6 +10,7 @@ import { QRButton } from '@/components/profile/QRButton'
 import { Avatar } from '@/components/ui/Avatar'
 import { CreatorBadge, MinPricePill } from '@/components/ui/UserBadges'
 import { getUserInfoOrNull } from '@/lib/user'
+import { formatLongMonthYear, type DateNames } from '@/lib/i18n/formatDate'
 
 interface Props {
   params: Promise<{ username: string }>
@@ -16,6 +18,14 @@ interface Props {
 
 export default async function PublicProfilePage({ params }: Props) {
   const { username } = await params
+  const t = await getTranslations('publicProfile')
+  const tDates = await getTranslations('dates')
+  const dateNames: DateNames = {
+    monthsShort: tDates.raw('monthsShort'),
+    monthsLong: tDates.raw('monthsLong'),
+    monthsLongGenitive: tDates.raw('monthsLongGenitive'),
+    weekdaysShort: tDates.raw('weekdaysShort'),
+  }
   const [result, meResult] = await Promise.all([
     getPublicProfile(username).catch(() => null),
     getMeServer().catch(() => null),
@@ -26,9 +36,9 @@ export default async function PublicProfilePage({ params }: Props) {
   const { user, links } = result
   const isSelf = meResult?.user.username === user.username
   const displayName = user.display_name ?? user.username ?? 'Unknown'
-  const memberSince = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(new Date(user.created_at))
+  const memberSince = formatLongMonthYear(new Date(user.created_at), dateNames)
   const creatorSince = user.creator_since
-    ? new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(new Date(user.creator_since))
+    ? formatLongMonthYear(new Date(user.creator_since), dateNames)
     : null
   const minPrice = user.creator_min_price ?? 0
 
@@ -62,8 +72,8 @@ export default async function PublicProfilePage({ params }: Props) {
                 className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold shadow-sm transition-colors"
               >
                 <MessageCircle size={15} />
-                <span className="sm:hidden">Message</span>
-                <span className="hidden sm:inline">Send a message</span>
+                <span className="sm:hidden">{t('message')}</span>
+                <span className="hidden sm:inline">{t('sendAMessage')}</span>
               </Link>
             )}
           </div>
@@ -74,7 +84,7 @@ export default async function PublicProfilePage({ params }: Props) {
           <div className="mb-5 flex items-start gap-2.5 px-4 py-3 rounded-xl bg-violet-50 dark:bg-violet-950/50 border border-violet-100 dark:border-violet-800/40">
             <MessageCircle size={14} className="text-violet-500 shrink-0 mt-0.5" />
             <p className="text-xs text-violet-700 dark:text-violet-300 leading-relaxed">
-              Pay <span className="font-semibold">{displayName}</span> to read your message aloud — to their audience, on stream or in a video. They only get paid when they deliver.
+              {t.rich('explainer', { name: displayName, b: (chunks) => <span className="font-semibold">{chunks}</span> })}
             </p>
           </div>
         )}
@@ -105,7 +115,7 @@ export default async function PublicProfilePage({ params }: Props) {
         {/* Min price — shown right after bio */}
         {minPrice > 0 && (
           <div className="mb-5">
-            <MinPricePill price={minPrice} suffix="per message" />
+            <MinPricePill price={minPrice} suffix={t('perMessage')} />
           </div>
         )}
 
@@ -122,18 +132,18 @@ export default async function PublicProfilePage({ params }: Props) {
         <div className="space-y-4">
           <div className="flex items-center gap-3 text-gray-500 dark:text-gray-400 text-sm">
             <Calendar size={15} className="flex-shrink-0 text-gray-400 dark:text-gray-500" />
-            <span>Member since {memberSince}</span>
+            <span>{t('memberSince', { date: memberSince })}</span>
           </div>
           {creatorSince && (
             <div className="flex items-center gap-3 text-gray-500 dark:text-gray-400 text-sm">
               <Sparkles size={15} className="flex-shrink-0 text-violet-400 dark:text-violet-500" />
-              <span>Creator since {creatorSince}</span>
+              <span>{t('creatorSince', { date: creatorSince })}</span>
             </div>
           )}
           {user.creator_verified_at && (
             <div className="flex items-center gap-3 text-gray-500 dark:text-gray-400 text-sm">
               <BadgeCheck size={15} className="flex-shrink-0 text-blue-500" />
-              <span>Verified since {new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(new Date(user.creator_verified_at))}</span>
+              <span>{t('verifiedSince', { date: formatLongMonthYear(new Date(user.creator_verified_at), dateNames) })}</span>
             </div>
           )}
         </div>

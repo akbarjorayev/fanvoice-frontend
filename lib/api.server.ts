@@ -61,8 +61,15 @@ export function getSentMessages(page = 1, limit = PAGE_SIZE, read: 'all' | 'read
   return serverFetch<{ messages: SentMessage[]; total: number }>(`/messages/sent?${params.toString()}`)
 }
 
-export function getReceivedMessages(page = 1, limit = PAGE_SIZE, sort: 'date' | 'money' = 'date') {
-  return serverFetch<{ messages: ReceivedMessage[]; total: number }>(`/messages/received?page=${page}&limit=${limit}&sort=${sort}`)
+export function getReceivedMessages(
+  page = 1,
+  limit = PAGE_SIZE,
+  sort: 'date' | 'money' = 'date',
+  read: 'all' | 'read' | 'unread' = 'all',
+) {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit), sort })
+  if (read !== 'all') params.set('read', read)
+  return serverFetch<{ messages: ReceivedMessage[]; total: number }>(`/messages/received?${params.toString()}`)
 }
 
 export function getMessageCounts() {

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { Mic, X, CheckCircle2, AlertCircle } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { Dialog } from '@/components/ui/Dialog'
 import { markMessageRead } from '@/lib/api'
 import { SUPPORT_TELEGRAM_URL } from '@/lib/constants'
@@ -79,6 +80,7 @@ interface Props {
 }
 
 export function ReadAloud({ messageId, messageText }: Props) {
+  const t = useTranslations('readAloud')
   const router = useRouter()
   const [step, setStep] = useState<Step>('idle')
   const [lang, setLang] = useState('uz-UZ')
@@ -209,8 +211,7 @@ export function ReadAloud({ messageId, messageText }: Props) {
       <div className="flex items-start gap-3 p-4 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
         <AlertCircle size={16} className="text-amber-500 shrink-0 mt-0.5" />
         <p className="text-sm text-amber-700 dark:text-amber-400">
-          Speech recognition isn&apos;t supported in your browser.{' '}
-          <span className="font-semibold">Please use Chrome or Edge.</span>
+          {t.rich('unsupported', { b: (chunks) => <span className="font-semibold">{chunks}</span> })}
         </p>
       </div>
     )
@@ -224,9 +225,9 @@ export function ReadAloud({ messageId, messageText }: Props) {
           <CheckCircle2 size={20} className="text-green-600 dark:text-green-400" />
         </div>
         <div>
-          <p className="font-semibold text-green-700 dark:text-green-400 text-sm">Verified!</p>
+          <p className="font-semibold text-green-700 dark:text-green-400 text-sm">{t('verified')}</p>
           <p className="text-sm text-green-600/70 dark:text-green-500 mt-0.5">
-            Message marked as read. The fan will be notified.
+            {t('markedAsRead')}
           </p>
         </div>
       </div>
@@ -241,14 +242,14 @@ export function ReadAloud({ messageId, messageText }: Props) {
         className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition-colors"
       >
         <Mic size={14} />
-        Read aloud
+        {t('readAloud')}
       </button>
 
       {/* Step 1 — Language picker */}
       <Dialog
         open={step === 'lang-picker'}
         onClose={() => setStep('idle')}
-        title="Choose language"
+        title={t('chooseLanguage')}
       >
         <div className="space-y-5">
           <div className="flex flex-col gap-2">
@@ -285,14 +286,14 @@ export function ReadAloud({ messageId, messageText }: Props) {
           </div>
 
           <p className="text-xs text-gray-400 dark:text-gray-500">
-            Don&apos;t see your language?{' '}
+            {t('dontSeeYourLanguage')}{' '}
             <a
               href={SUPPORT_TELEGRAM_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="text-violet-600 dark:text-violet-400 hover:underline"
             >
-              Tell support
+              {t('tellSupport')}
             </a>
           </p>
 
@@ -300,7 +301,7 @@ export function ReadAloud({ messageId, messageText }: Props) {
             onClick={startReading}
             className="w-full py-3 rounded-full bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition-colors"
           >
-            Start
+            {t('start')}
           </button>
         </div>
       </Dialog>
@@ -324,12 +325,12 @@ export function ReadAloud({ messageId, messageText }: Props) {
                     <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
                   </span>
                   <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                    Read aloud
+                    {t('readAloud')}
                   </span>
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="text-xs tabular-nums text-gray-400 dark:text-gray-500">
-                    {matched.size} / {totalWords} words
+                    {t('wordsCount', { matched: matched.size, total: totalWords })}
                   </span>
                   <button
                     onClick={closeReading}
@@ -384,14 +385,14 @@ export function ReadAloud({ messageId, messageText }: Props) {
               {score >= STOP_THRESHOLD && (
                 <div className="px-6 py-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
                   <p className="text-xs text-gray-400 dark:text-gray-500">
-                    Close enough — you can stop here.
+                    {t('closeEnough')}
                   </p>
                   <button
                     onClick={handleSuccess}
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-green-600 hover:bg-green-500 text-white text-sm font-semibold transition-colors"
                   >
                     <CheckCircle2 size={14} />
-                    Mark as read
+                    {t('markAsRead')}
                   </button>
                 </div>
               )}

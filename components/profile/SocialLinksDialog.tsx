@@ -8,10 +8,12 @@ import { faXTwitter, faInstagram, faYoutube, faTiktok, faTelegram, faGithub } fr
 import { faGlobe, faTrash, faLink, faCheck, faCircleNotch } from '@fortawesome/free-solid-svg-icons'
 import { PenLine, X } from 'lucide-react'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
+import { useTranslations } from 'next-intl'
 import { Dialog } from '@/components/ui/Dialog'
 import { upsertSocialLink, deleteSocialLink } from '@/lib/api'
+import { useApiErrorMessage } from '@/lib/i18n/useApiErrorMessage'
 import type { SocialLink, Platform } from '@/types/social-link'
-import { PLATFORMS, PLATFORM_META } from '@/types/social-link'
+import { PLATFORMS } from '@/types/social-link'
 
 const ICONS: Record<Platform, IconDefinition> = {
   twitter:   faXTwitter,
@@ -33,21 +35,27 @@ const PLACEHOLDERS: Record<Platform, string> = {
   website:   'https://yourwebsite.com',
 }
 
-function validatePlatformUrl(platform: Platform, url: string): string | null {
-  const rules: Record<Platform, RegExp | null> = {
-    twitter:   /^https?:\/\/(www\.)?(twitter\.com|x\.com)\//i,
-    instagram: /^https?:\/\/(www\.)?instagram\.com\//i,
-    youtube:   /^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\//i,
-    tiktok:    /^https?:\/\/(www\.)?tiktok\.com\//i,
-    telegram:  /^https?:\/\/(t\.me|telegram\.me|telegram\.org)\//i,
-    github:    /^https?:\/\/(www\.)?github\.com\//i,
-    website:   /^https?:\/\/[^\s]+\.[^\s]{2,}/i,
-  }
-  const rule = rules[platform]
+const DOMAIN_RULES: Record<Platform, RegExp | null> = {
+  twitter:   /^https?:\/\/(www\.)?(twitter\.com|x\.com)\//i,
+  instagram: /^https?:\/\/(www\.)?instagram\.com\//i,
+  youtube:   /^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\//i,
+  tiktok:    /^https?:\/\/(www\.)?tiktok\.com\//i,
+  telegram:  /^https?:\/\/(t\.me|telegram\.me|telegram\.org)\//i,
+  github:    /^https?:\/\/(www\.)?github\.com\//i,
+  website:   /^https?:\/\/[^\s]+\.[^\s]{2,}/i,
+}
+
+function validatePlatformUrl(
+  platform: Platform,
+  url: string,
+  t: ReturnType<typeof useTranslations>,
+  tPlatforms: ReturnType<typeof useTranslations>,
+): string | null {
+  const rule = DOMAIN_RULES[platform]
   if (rule && !rule.test(url)) {
     return platform === 'website'
-      ? `Must be a valid URL (e.g. ${PLACEHOLDERS[platform]})`
-      : `Must be a valid ${PLATFORM_META[platform].label} link`
+      ? t('mustBeValidUrl', { example: PLACEHOLDERS[platform] })
+      : t('mustBeValidPlatformLink', { platform: tPlatforms(platform) })
   }
   return null
 }
@@ -59,6 +67,10 @@ interface Props {
 }
 
 export function SocialLinksDialog({ open, onClose, initialLinks }: Props) {
+  const t = useTranslations('socialLinksDialog')
+  const tCommon = useTranslations('common')
+  const tPlatforms = useTranslations('platforms')
+  const getApiErrorMessage = useApiErrorMessage()
   const router = useRouter()
   const [links, setLinks] = useState<SocialLink[]>(initialLinks)
 
@@ -87,19 +99,19 @@ export function SocialLinksDialog({ open, onClose, initialLinks }: Props) {
     if (!addOpen) { setAddOpen(true); return }
     const trimmed = addUrl.trim()
     if (!trimmed) return
-    const err = validatePlatformUrl(addPlatform, trimmed)
+    const err = validatePlatformUrl(addPlatform, trimmed, t, tPlatforms)
     if (err) { toast.error(err); return }
     setAdding(true)
     try {
       const { link } = await upsertSocialLink(addPlatform, trimmed)
       setLinks((prev) => [...prev.filter((l) => l.platform !== addPlatform), link]
         .sort((a, b) => a.platform.localeCompare(b.platform)))
-      toast.success('Link added!')
+      toast.success(t('linkAdded'))
       setAddUrl('')
       const next = available.find((p) => p !== addPlatform)
       if (next) setAddPlatform(next)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to save link.')
+      toast.error(getApiErrorMessage(err))
     } finally {
       setAdding(false)
     }
@@ -108,16 +120,16 @@ export function SocialLinksDialog({ open, onClose, initialLinks }: Props) {
   async function handleSaveEdit(p: Platform) {
     const trimmed = editUrl.trim()
     if (!trimmed) return
-    const err = validatePlatformUrl(p, trimmed)
+    const err = validatePlatformUrl(p, trimmed, t, tPlatforms)
     if (err) { toast.error(err); return }
     setSaving(true)
     try {
       const { link } = await upsertSocialLink(p, trimmed)
       setLinks((prev) => prev.map((l) => l.platform === p ? link : l))
       setEditingPlatform(null)
-      toast.success('Link updated!')
+      toast.success(t('linkUpdated'))
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to save.')
+      toast.error(getApiErrorMessage(err))
     } finally {
       setSaving(false)
     }
@@ -129,9 +141,9 @@ export function SocialLinksDialog({ open, onClose, initialLinks }: Props) {
       await deleteSocialLink(p)
       setLinks((prev) => prev.filter((l) => l.platform !== p))
       if (editingPlatform === p) setEditingPlatform(null)
-      toast.success('Link removed.')
+      toast.success(t('linkRemoved'))
     } catch {
-      toast.error('Failed to remove link.')
+      toast.error(t('failedToRemove'))
     } finally {
       setDeletingPlatform(null)
     }
@@ -143,18 +155,18 @@ export function SocialLinksDialog({ open, onClose, initialLinks }: Props) {
   }
 
   return (
-    <Dialog open={open} onClose={handleClose} title="Social links">
+    <Dialog open={open} onClose={handleClose} title={t('title')}>
       {/* Existing links */}
       <div className="space-y-2 mb-5">
         {links.length === 0 ? (
           <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-4">
-            No links added yet.
+            {t('noLinksAdded')}
           </p>
         ) : links.map((link) => {
           const icon = ICONS[link.platform as Platform] ?? faGlobe
           const isEditing = editingPlatform === link.platform
           const isDeleting = deletingPlatform === link.platform
-          const label = PLATFORM_META[link.platform as Platform]?.label ?? link.platform
+          const label = PLATFORMS.includes(link.platform as Platform) ? tPlatforms(link.platform) : link.platform
 
           return (
             <div key={link.platform} className="rounded-2xl border border-gray-100 dark:border-gray-700/60 bg-gray-50 dark:bg-gray-800/50 overflow-hidden">
@@ -183,7 +195,7 @@ export function SocialLinksDialog({ open, onClose, initialLinks }: Props) {
                       onClick={() => { setEditingPlatform(null); setEditUrl('') }}
                       className="flex-1 py-2 rounded-full text-sm font-medium text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     >
-                      Cancel
+                      {tCommon('cancel')}
                     </button>
                     <button
                       onClick={() => handleSaveEdit(link.platform as Platform)}
@@ -193,7 +205,7 @@ export function SocialLinksDialog({ open, onClose, initialLinks }: Props) {
                       {saving
                         ? <FontAwesomeIcon icon={faCircleNotch} spin style={{ width: 12, height: 12 }} />
                         : <FontAwesomeIcon icon={faCheck} style={{ width: 12, height: 12 }} />}
-                      {saving ? 'Saving…' : 'Save'}
+                      {saving ? tCommon('saving') : tCommon('save')}
                     </button>
                   </div>
                 </div>
@@ -215,12 +227,12 @@ export function SocialLinksDialog({ open, onClose, initialLinks }: Props) {
                   <div className="flex items-center gap-1 shrink-0">
                     {confirmDeletePlatform === link.platform ? (
                       <span className="animate-scale-in flex items-center gap-1">
-                        <span className="text-xs font-medium text-red-500 mr-1">Remove?</span>
+                        <span className="text-xs font-medium text-red-500 mr-1">{t('removeConfirm')}</span>
                         <button
                           onClick={() => setConfirmDeletePlatform(null)}
                           className="px-2.5 py-1 rounded-full text-xs font-medium text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                         >
-                          No
+                          {tCommon('no')}
                         </button>
                         <button
                           onClick={() => { setConfirmDeletePlatform(null); handleDelete(link.platform) }}
@@ -229,7 +241,7 @@ export function SocialLinksDialog({ open, onClose, initialLinks }: Props) {
                         >
                           {isDeleting
                             ? <FontAwesomeIcon icon={faCircleNotch} spin style={{ width: 10, height: 10 }} />
-                            : 'Yes'}
+                            : tCommon('yes')}
                         </button>
                       </span>
                     ) : (
@@ -261,7 +273,7 @@ export function SocialLinksDialog({ open, onClose, initialLinks }: Props) {
       {/* Add new link */}
       <div className="border-t border-gray-100 dark:border-gray-800 pt-4">
         {available.length === 0 ? (
-          <p className="text-xs text-center text-gray-400 dark:text-gray-500">All platforms added.</p>
+          <p className="text-xs text-center text-gray-400 dark:text-gray-500">{t('allPlatformsAdded')}</p>
         ) : (
           <form onSubmit={handleAdd}>
             <div inert={!addOpen} className={`overflow-hidden transition-all duration-500 ease-in-out ${addOpen ? 'max-h-[200px] opacity-100 mb-3' : 'max-h-0 opacity-0'}`}>
@@ -272,7 +284,7 @@ export function SocialLinksDialog({ open, onClose, initialLinks }: Props) {
                     <button
                       key={p}
                       type="button"
-                      title={PLATFORM_META[p].label}
+                      title={tPlatforms(p)}
                       onClick={() => { setAddPlatform(p); setAddUrl('') }}
                       className={`w-10 h-10 rounded-full flex items-center justify-center border transition-all ${
                         addPlatform === p
@@ -312,7 +324,7 @@ export function SocialLinksDialog({ open, onClose, initialLinks }: Props) {
               {adding
                 ? <FontAwesomeIcon icon={faCircleNotch} spin style={{ width: 13, height: 13 }} />
                 : <FontAwesomeIcon icon={faLink} style={{ width: 13, height: 13 }} />}
-              {adding ? 'Adding…' : 'Add link'}
+              {adding ? t('adding') : t('addLink')}
             </button>
           </form>
         )}

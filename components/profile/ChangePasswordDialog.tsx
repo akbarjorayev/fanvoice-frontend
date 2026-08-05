@@ -4,8 +4,10 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircleNotch, faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons'
+import { useTranslations } from 'next-intl'
 import { changePassword } from '@/lib/api'
 import { Dialog } from '@/components/ui/Dialog'
+import { useApiErrorMessage } from '@/lib/i18n/useApiErrorMessage'
 
 interface Props {
   open: boolean
@@ -13,6 +15,9 @@ interface Props {
 }
 
 export function ChangePasswordDialog({ open, onClose }: Props) {
+  const t = useTranslations('changePasswordDialog')
+  const tCommon = useTranslations('common')
+  const getApiErrorMessage = useApiErrorMessage()
   const [current, setCurrent] = useState('')
   const [newPwd, setNewPwd] = useState('')
   const [confirm, setConfirm] = useState('')
@@ -38,17 +43,17 @@ export function ChangePasswordDialog({ open, onClose }: Props) {
 
     if (newPwd !== confirm) {
       requestAnimationFrame(() => setConfirmError(true))
-      toast.error("New passwords don't match")
+      toast.error(t('newPasswordsDontMatch'))
       return
     }
 
     setLoading(true)
     try {
       await changePassword(current, newPwd)
-      toast.success('Password changed successfully')
+      toast.success(t('passwordChanged'))
       handleClose()
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to change password')
+      toast.error(getApiErrorMessage(err))
     } finally {
       setLoading(false)
     }
@@ -61,7 +66,7 @@ export function ChangePasswordDialog({ open, onClose }: Props) {
     <Dialog
       open={open}
       onClose={handleClose}
-      title="Change password"
+      title={t('title')}
     >
       <form onSubmit={handleSubmit} className="space-y-3">
         {/* Current password */}
@@ -72,7 +77,7 @@ export function ChangePasswordDialog({ open, onClose }: Props) {
             autoComplete="current-password"
             value={current}
             onChange={(e) => setCurrent(e.target.value)}
-            placeholder="Current password"
+            placeholder={t('currentPassword')}
             required
             disabled={loading}
             className={`${inputClass} pr-11`}
@@ -101,7 +106,7 @@ export function ChangePasswordDialog({ open, onClose }: Props) {
               autoComplete="new-password"
               value={newPwd}
               onChange={(e) => setNewPwd(e.target.value)}
-              placeholder="New password"
+              placeholder={t('newPassword')}
               required
               disabled={loading}
               className={`${inputClass} pr-11`}
@@ -121,7 +126,7 @@ export function ChangePasswordDialog({ open, onClose }: Props) {
             </button>
           </div>
           <p className="text-xs text-gray-400 dark:text-gray-500 px-1">
-            Min 8 characters, at least 1 uppercase letter and 1 number
+            {t('passwordHint')}
           </p>
         </div>
 
@@ -132,7 +137,7 @@ export function ChangePasswordDialog({ open, onClose }: Props) {
           autoComplete="new-password"
           value={confirm}
           onChange={(e) => { setConfirm(e.target.value); setConfirmError(false) }}
-          placeholder="Confirm new password"
+          placeholder={t('confirmNewPassword')}
           required
           disabled={loading}
           className={`${inputClass} ${confirmError ? 'border-red-400 dark:border-red-500 focus:ring-red-500/60 animate-shake' : ''}`}
@@ -145,7 +150,7 @@ export function ChangePasswordDialog({ open, onClose }: Props) {
             disabled={loading}
             className="flex-1 px-4 py-2.5 rounded-full text-sm font-medium text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
           >
-            Cancel
+            {tCommon('cancel')}
           </button>
           <button
             type="submit"
@@ -155,7 +160,7 @@ export function ChangePasswordDialog({ open, onClose }: Props) {
             {loading && (
               <FontAwesomeIcon icon={faCircleNotch} spin style={{ width: 13, height: 13 }} />
             )}
-            {loading ? 'Saving…' : 'Change password'}
+            {loading ? tCommon('saving') : t('changePassword')}
           </button>
         </div>
       </form>

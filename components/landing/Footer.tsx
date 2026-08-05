@@ -5,18 +5,21 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTelegram } from '@fortawesome/free-brands-svg-icons'
+import { useTranslations } from 'next-intl'
 import { SUPPORT_TELEGRAM_URL } from '@/lib/constants'
 
-const baseLinks = [
-  { label: 'For Creators', href: '/signup' },
-  { label: 'Terms', href: '/terms' },
-  { label: 'Privacy', href: '/privacy' },
-]
-
 export function Footer() {
+  const t = useTranslations('footer')
+  const tNav = useTranslations('nav')
   const pathname = usePathname()
+
+  const baseLinks = [
+    { label: t('forCreators'), href: '/signup' },
+    { label: t('terms'), href: '/terms' },
+    { label: t('privacy'), href: '/privacy' },
+  ]
   const links = pathname === '/'
-    ? [{ label: 'How it works', href: '#how-it-works' }, ...baseLinks]
+    ? [{ label: tNav('howItWorks'), href: '#how-it-works' }, ...baseLinks]
     : baseLinks
 
   return (
@@ -44,11 +47,11 @@ export function Footer() {
             className="flex items-center gap-1.5 text-gray-500 text-sm hover:text-sky-500 dark:hover:text-sky-400 transition-colors"
           >
             <FontAwesomeIcon icon={faTelegram} style={{ width: 14, height: 14 }} />
-            Support
+            {tNav('support')}
           </a>
         </nav>
 
-        <p className="text-gray-400 dark:text-gray-600 text-sm shrink-0">&copy; 2026 FanVoice</p>
+        <p className="text-gray-400 dark:text-gray-600 text-sm shrink-0">{t('copyright')}</p>
       </div>
     </footer>
   )

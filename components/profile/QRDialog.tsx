@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Download, Share2, Copy, Check } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { Dialog } from '@/components/ui/Dialog'
 import { COPY_FEEDBACK_MS } from '@/lib/constants'
 
@@ -18,6 +19,8 @@ interface Props {
 }
 
 export function QRDialog({ open, onClose, username }: Props) {
+  const t = useTranslations('qrDialog')
+  const tCommon = useTranslations('common')
   const containerRef = useRef<HTMLDivElement>(null)
   const qrRef = useRef<QRInstance | null>(null)
   const [ready, setReady] = useState(false)
@@ -107,7 +110,7 @@ export function QRDialog({ open, onClose, username }: Props) {
     : `/u/${username}`
 
   return (
-    <Dialog open={open} onClose={onClose} title="QR Code">
+    <Dialog open={open} onClose={onClose} title={t('title')}>
       <div className="flex flex-col items-center gap-5">
         {/* QR card */}
         <div className="p-1">
@@ -144,7 +147,7 @@ export function QRDialog({ open, onClose, username }: Props) {
             className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-full border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-600 dark:text-gray-300 hover:border-violet-400 hover:text-violet-600 dark:hover:text-violet-400 transition-colors disabled:opacity-40"
           >
             <Download size={14} />
-            Download
+            {tCommon('download')}
           </button>
           <button
             onClick={handleShare}
@@ -152,7 +155,7 @@ export function QRDialog({ open, onClose, username }: Props) {
             className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-full bg-violet-600 text-white text-sm font-semibold hover:bg-violet-500 transition-colors disabled:opacity-40"
           >
             <Share2 size={14} />
-            Share
+            {tCommon('share')}
           </button>
         </div>
       </div>

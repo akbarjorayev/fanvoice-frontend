@@ -2,12 +2,14 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { Inbox, Send, Sparkles, ChevronLeft, ChevronRight, Coins, Clock } from 'lucide-react'
+import { useLocale, useTranslations } from 'next-intl'
 import type { SentMessage, ReceivedMessage } from '@/types/message'
-import { creatorAmount, formatPrice } from '@/lib/fees'
+import { formatPrice } from '@/lib/fees'
 import { Avatar } from '@/components/ui/Avatar'
 import { PAGE_SIZE } from '@/lib/constants'
+import { formatShortDate, type DateNames } from '@/lib/i18n/formatDate'
+import type { Locale } from '@/lib/i18n/config'
 
 interface Props {
   tab: 'sent' | 'received'
@@ -23,15 +25,46 @@ interface Props {
   unreadReceived: number
 }
 
-function formatMessageDate(dateStr: string): string {
+function formatMessageDate(
+  dateStr: string,
+  locale: Locale,
+  t: ReturnType<typeof useTranslations>,
+  dateNames: DateNames,
+): string {
   const date = new Date(dateStr)
   const now = new Date()
   const dateDay = new Date(date.getFullYear(), date.getMonth(), date.getDate())
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   const diffDays = Math.round((today.getTime() - dateDay.getTime()) / 86400000)
-  if (diffDays === 0) return 'Today'
-  if (diffDays === 1) return 'Yesterday'
-  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(date)
+  if (diffDays === 0) return t('today')
+  if (diffDays === 1) return t('yesterday')
+  return formatShortDate(date, locale, dateNames)
+}
+
+function useSlidingPill(getActiveEl: () => HTMLElement | null, deps: React.DependencyList) {
+  const [pill, setPill] = useState<{ left: number; width: number } | null>(null)
+
+  useEffect(() => {
+    const el = getActiveEl()
+    const container = el?.parentElement
+    if (!el || !container) return
+
+    function measure() {
+      const current = getActiveEl()
+      if (current) setPill({ left: current.offsetLeft, width: current.offsetWidth })
+    }
+    measure()
+
+    // Re-measure on any width change within the pill row — covers locale
+    // switches (text length changes), font loading, and count-badge digits,
+    // not just the `deps` that changed which button is active.
+    const ro = new ResizeObserver(measure)
+    ro.observe(container)
+    return () => ro.disconnect()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps)
+
+  return pill
 }
 
 function pageNumbers(current: number, total: number): (number | '...')[] {
@@ -55,29 +88,30 @@ function StatusPills({
   isPaid: boolean
   nowrap?: boolean
 }) {
+  const t = useTranslations('messageTabs')
   const nw = nowrap ? ' whitespace-nowrap' : ''
   return (
     <>
       {message.read_at ? (
         <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400${nw}`}>
           <span className="w-1 h-1 rounded-full bg-blue-500" />
-          Read
+          {t('read')}
         </span>
       ) : (
         <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400${nw}`}>
           <span className="w-1 h-1 rounded-full bg-gray-400" />
-          Unread
+          {t('unread')}
         </span>
       )}
       {isPaid ? (
         <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400${nw}`}>
           <span className="w-1 h-1 rounded-full bg-green-500" />
-          Paid
+          {t('paid')}
         </span>
       ) : (
         <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400${nw}`}>
           <Clock size={9} />
-          Unpaid
+          {t('unpaid')}
         </span>
       )}
     </>
@@ -87,20 +121,13 @@ function StatusPills({
 function PillGroup<T extends string>({
   options,
   value,
-  onChange,
 }: {
-  options: { value: T; label: string }[]
+  options: { value: T; label: string; href: string }[]
   value: T
-  onChange: (v: T) => void
 }) {
-  const btnRefs = useRef<(HTMLButtonElement | null)[]>([])
-  const [pill, setPill] = useState<{ left: number; width: number } | null>(null)
-
-  useEffect(() => {
-    const idx = options.findIndex((o) => o.value === value)
-    const btn = btnRefs.current[idx]
-    if (btn) setPill({ left: btn.offsetLeft, width: btn.offsetWidth })
-  }, [value, options])
+  const btnRefs = useRef<(HTMLAnchorElement | null)[]>([])
+  const activeIdx = options.findIndex((o) => o.value === value)
+  const pill = useSlidingPill(() => btnRefs.current[activeIdx] ?? null, [activeIdx])
 
   return (
     <div className="relative flex items-center gap-0.5 p-0.5 bg-gray-100 dark:bg-gray-800/60 rounded-full">
@@ -111,10 +138,10 @@ function PillGroup<T extends string>({
         />
       )}
       {options.map((opt, i) => (
-        <button
+        <Link
           key={opt.value}
+          href={opt.href}
           ref={(el) => { btnRefs.current[i] = el }}
-          onClick={() => onChange(opt.value)}
           className={`relative z-10 px-2.5 py-1 rounded-full text-xs font-medium transition-colors duration-150 ${
             value === opt.value
               ? 'text-gray-900 dark:text-white'
@@ -122,7 +149,7 @@ function PillGroup<T extends string>({
           }`}
         >
           {opt.label}
-        </button>
+        </Link>
       ))}
     </div>
   )
@@ -141,19 +168,25 @@ export function MessageTabs({
   receivedCount,
   unreadReceived,
 }: Props) {
-  const router = useRouter()
+  const t = useTranslations('messageTabs')
+  const tDates = useTranslations('dates')
+  const locale = useLocale() as Locale
+  const dateNames: DateNames = {
+    monthsShort: tDates.raw('monthsShort'),
+    monthsLong: tDates.raw('monthsLong'),
+    monthsLongGenitive: tDates.raw('monthsLongGenitive'),
+    weekdaysShort: tDates.raw('weekdaysShort'),
+  }
   const totalPages = Math.ceil(total / PAGE_SIZE)
 
-  const sentBtnRef = useRef<HTMLButtonElement>(null)
-  const receivedBtnRef = useRef<HTMLButtonElement>(null)
-  const [pill, setPill] = useState<{ left: number; width: number } | null>(null)
+  const sentBtnRef = useRef<HTMLAnchorElement>(null)
+  const receivedBtnRef = useRef<HTMLAnchorElement>(null)
+  const pill = useSlidingPill(
+    () => (tab === 'sent' ? sentBtnRef.current : receivedBtnRef.current),
+    [tab],
+  )
 
-  useEffect(() => {
-    const activeBtn = tab === 'sent' ? sentBtnRef.current : receivedBtnRef.current
-    if (activeBtn) setPill({ left: activeBtn.offsetLeft, width: activeBtn.offsetWidth })
-  }, [tab])
-
-  function navigate(
+  function buildHref(
     newTab: 'sent' | 'received',
     newPage: number,
     newSort = sort,
@@ -163,11 +196,12 @@ export function MessageTabs({
     const params = new URLSearchParams({ tab: newTab, page: String(newPage) })
     if (newTab === 'received') {
       params.set('sort', newSort)
+      if (newRead !== 'all') params.set('read', newRead)
     } else {
       if (newRead !== 'all') params.set('read', newRead)
       if (newPay !== 'all') params.set('pay', newPay)
     }
-    router.push(`/dashboard?${params.toString()}`)
+    return `/dashboard?${params.toString()}`
   }
 
   return (
@@ -182,9 +216,9 @@ export function MessageTabs({
               style={{ left: pill.left, width: pill.width }}
             />
           )}
-          <button
+          <Link
             ref={sentBtnRef}
-            onClick={() => navigate('sent', 1)}
+            href={buildHref('sent', 1)}
             className={`relative z-10 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors duration-150 ${
               tab === 'sent'
                 ? 'text-gray-900 dark:text-white'
@@ -192,17 +226,17 @@ export function MessageTabs({
             }`}
           >
             <Send size={14} />
-            Sent
+            {t('sent')}
             {sentCount > 0 && (
               <span className="ml-0.5 min-w-[20px] h-5 text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1 rounded-full inline-flex items-center justify-center leading-none">
                 {sentCount}
               </span>
             )}
-          </button>
+          </Link>
 
-          <button
+          <Link
             ref={receivedBtnRef}
-            onClick={() => navigate('received', 1)}
+            href={buildHref('received', 1)}
             className={`relative z-10 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors duration-150 ${
               tab === 'received'
                 ? 'text-gray-900 dark:text-white'
@@ -210,7 +244,7 @@ export function MessageTabs({
             }`}
           >
             <Inbox size={14} />
-            Received
+            {t('received')}
             {isCreator && unreadReceived > 0 && (
               <span className="ml-0.5 min-w-[20px] h-5 text-xs bg-amber-500 text-white px-1 rounded-full inline-flex items-center justify-center leading-none">
                 {unreadReceived}
@@ -221,7 +255,7 @@ export function MessageTabs({
                 {receivedCount}
               </span>
             )}
-          </button>
+          </Link>
         </div>
 
         {/* Filters — sent tab only, hidden when no messages and no active filter */}
@@ -229,35 +263,42 @@ export function MessageTabs({
           <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
             <PillGroup
               options={[
-                { value: 'all', label: 'All' },
-                { value: 'read', label: 'Read' },
-                { value: 'unread', label: 'Unread' },
+                { value: 'all', label: t('all'), href: buildHref('sent', 1, sort, 'all', pay) },
+                { value: 'read', label: t('read'), href: buildHref('sent', 1, sort, 'read', pay) },
+                { value: 'unread', label: t('unread'), href: buildHref('sent', 1, sort, 'unread', pay) },
               ]}
               value={read}
-              onChange={(v) => navigate('sent', 1, sort, v, pay)}
             />
             <PillGroup
               options={[
-                { value: 'all', label: 'All' },
-                { value: 'paid', label: 'Paid' },
-                { value: 'unpaid', label: 'Unpaid' },
+                { value: 'all', label: t('all'), href: buildHref('sent', 1, sort, read, 'all') },
+                { value: 'paid', label: t('paid'), href: buildHref('sent', 1, sort, read, 'paid') },
+                { value: 'unpaid', label: t('unpaid'), href: buildHref('sent', 1, sort, read, 'unpaid') },
               ]}
               value={pay}
-              onChange={(v) => navigate('sent', 1, sort, read, v)}
             />
           </div>
         )}
 
-        {/* Sort — received tab only */}
-        {tab === 'received' && isCreator && (
-          <PillGroup
-            options={[
-              { value: 'date', label: 'Latest' },
-              { value: 'money', label: 'Most paid' },
-            ]}
-            value={sort}
-            onChange={(v) => navigate('received', 1, v)}
-          />
+        {/* Filters + sort — received tab only, hidden when no messages and no active filter */}
+        {tab === 'received' && isCreator && (messages.length > 0 || read !== 'all') && (
+          <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
+            <PillGroup
+              options={[
+                { value: 'all', label: t('all'), href: buildHref('received', 1, sort, 'all') },
+                { value: 'read', label: t('read'), href: buildHref('received', 1, sort, 'read') },
+                { value: 'unread', label: t('unread'), href: buildHref('received', 1, sort, 'unread') },
+              ]}
+              value={read}
+            />
+            <PillGroup
+              options={[
+                { value: 'date', label: t('latest'), href: buildHref('received', 1, 'date', read) },
+                { value: 'money', label: t('mostPaid'), href: buildHref('received', 1, 'money', read) },
+              ]}
+              value={sort}
+            />
+          </div>
         )}
       </div>
 
@@ -267,20 +308,20 @@ export function MessageTabs({
           <div className="w-12 h-12 rounded-full bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center mb-3">
             <Sparkles size={20} className="text-violet-500" />
           </div>
-          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">You&apos;re not a creator yet</p>
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('notCreatorYet')}</p>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-            Become a creator to receive messages from fans
+            {t('becomeCreatorHint')}
           </p>
           <Link
             href="/me?becomecreator=1"
             className="mt-4 px-4 py-2 rounded-full bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold transition-colors"
           >
-            Set up creator profile
+            {t('setUpCreatorProfile')}
           </Link>
         </div>
       ) : messages.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+          <div className="w-14 h-14 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
             {tab === 'sent' ? (
               <Send size={22} className="text-gray-400" />
             ) : (
@@ -288,12 +329,12 @@ export function MessageTabs({
             )}
           </div>
           <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            {tab === 'sent' ? 'No sent messages yet' : 'No messages yet'}
+            {tab === 'sent' ? t('noSentMessages') : t('noMessages')}
           </p>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 max-w-xs">
             {tab === 'sent'
-              ? 'Find a creator and send them your first message'
-              : 'Share your profile link so fans can reach you'}
+              ? t('findCreatorHint')
+              : t('shareProfileHint')}
           </p>
         </div>
       ) : (
@@ -314,7 +355,7 @@ export function MessageTabs({
                   : (msg as ReceivedMessage).fan_avatar_url
               const isUnread = tab === 'received' && msg.read_at === null
               const isPaid = tab === 'sent' ? (msg as SentMessage).paid_at !== null : true
-              const displayPrice = tab === 'received' ? creatorAmount(msg.price) : msg.price
+              const displayPrice = tab === 'received' ? (msg as ReceivedMessage).creator_earning : msg.price
 
               return (
                 <Link
@@ -339,7 +380,7 @@ export function MessageTabs({
                         )}
                       </div>
                       <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0 whitespace-nowrap">
-                        {formatMessageDate(msg.created_at)}
+                        {formatMessageDate(msg.created_at, locale, t, dateNames)}
                       </span>
                     </div>
 
@@ -380,40 +421,50 @@ export function MessageTabs({
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 dark:border-gray-800">
               <p className="text-xs text-gray-400 dark:text-gray-500">
-                Page {page} of {totalPages}
+                {t('pageOf', { page, total: totalPages })}
               </p>
               <div className="flex items-center gap-1">
-                <button
-                  onClick={() => navigate(tab, page - 1)}
-                  disabled={page === 1}
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                >
-                  <ChevronLeft size={14} />
-                </button>
+                {page === 1 ? (
+                  <span className="w-7 h-7 rounded-full flex items-center justify-center text-gray-300 dark:text-gray-700 cursor-not-allowed">
+                    <ChevronLeft size={14} />
+                  </span>
+                ) : (
+                  <Link
+                    href={buildHref(tab, page - 1)}
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <ChevronLeft size={14} />
+                  </Link>
+                )}
                 {pageNumbers(page, totalPages).map((p, i) =>
                   p === '...'
                     ? <span key={`ellipsis-${i}`} className="w-7 text-center text-xs text-gray-400 dark:text-gray-600">…</span>
                     : (
-                      <button
+                      <Link
                         key={p}
-                        onClick={() => navigate(tab, p)}
-                        className={`w-7 h-7 rounded-full text-xs font-medium transition-colors ${
+                        href={buildHref(tab, p)}
+                        className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium transition-colors ${
                           p === page
                             ? 'bg-violet-600 text-white'
                             : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
                         }`}
                       >
                         {p}
-                      </button>
+                      </Link>
                     )
                 )}
-                <button
-                  onClick={() => navigate(tab, page + 1)}
-                  disabled={page === totalPages}
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                >
-                  <ChevronRight size={14} />
-                </button>
+                {page === totalPages ? (
+                  <span className="w-7 h-7 rounded-full flex items-center justify-center text-gray-300 dark:text-gray-700 cursor-not-allowed">
+                    <ChevronRight size={14} />
+                  </span>
+                ) : (
+                  <Link
+                    href={buildHref(tab, page + 1)}
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <ChevronRight size={14} />
+                  </Link>
+                )}
               </div>
             </div>
           )}

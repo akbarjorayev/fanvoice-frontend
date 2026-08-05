@@ -6,12 +6,16 @@ import { usePathname } from 'next/navigation'
 import Image from 'next/image'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faTelegram } from '@fortawesome/free-brands-svg-icons'
+import { useTranslations } from 'next-intl'
 import { getMe } from '@/lib/api'
 import type { User } from '@/types/user'
 import { AvatarMenu } from '@/components/dashboard/AvatarMenu'
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher'
 import { SUPPORT_TELEGRAM_URL } from '@/lib/constants'
 
 export function Navbar() {
+  const t = useTranslations('nav')
+  const tCommon = useTranslations('common')
   const pathname = usePathname()
   const [scrolled, setScrolled] = useState(false)
   const [user, setUser] = useState<User | null | undefined>(undefined)
@@ -60,7 +64,7 @@ export function Navbar() {
             href="#how-it-works"
             className="hidden sm:block text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors px-3 py-2"
           >
-            How it works
+            {t('howItWorks')}
           </a>
         )}
         <a
@@ -70,8 +74,10 @@ export function Navbar() {
           className="hidden sm:inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-sky-500 dark:hover:text-sky-400 transition-colors px-3 py-2"
         >
           <FontAwesomeIcon icon={faTelegram} style={{ width: 14, height: 14 }} />
-          Support
+          {t('support')}
         </a>
+
+        <LanguageSwitcher />
 
         {user !== undefined && (
           <div
@@ -91,13 +97,13 @@ export function Navbar() {
                   href="/login"
                   className="hidden sm:block px-4 py-2 rounded-full text-sm font-semibold text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/20 transition-colors"
                 >
-                  Sign in
+                  {tCommon('signIn')}
                 </Link>
                 <Link
                   href="/signup"
                   className="px-4 py-2 rounded-full bg-violet-600 text-white text-sm font-semibold hover:bg-violet-500 transition-colors shadow-lg shadow-violet-600/20"
                 >
-                  Sign up
+                  {tCommon('signUp')}
                 </Link>
               </div>
             )}

@@ -6,9 +6,11 @@ import { User, AtSign, Check } from 'lucide-react'
 import { toast } from 'sonner'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircleNotch } from '@fortawesome/free-solid-svg-icons'
+import { useTranslations } from 'next-intl'
 import { Dialog } from '@/components/ui/Dialog'
 import { updateProfile, updateCreator } from '@/lib/api'
 import { formatPrice, PRICE_STEP, CREATOR_MAX_PRICE } from '@/lib/fees'
+import { useApiErrorMessage } from '@/lib/i18n/useApiErrorMessage'
 import type { User as UserType } from '@/types/user'
 
 interface Props {
@@ -19,6 +21,9 @@ interface Props {
 }
 
 export function EditProfileDialog({ open, onClose, user, focusPrice }: Props) {
+  const t = useTranslations('editProfileDialog')
+  const tCommon = useTranslations('common')
+  const getApiErrorMessage = useApiErrorMessage()
   const router = useRouter()
   const priceRef = useRef<HTMLInputElement>(null)
 
@@ -56,14 +61,14 @@ export function EditProfileDialog({ open, onClose, user, focusPrice }: Props) {
     const usernameChanged = newUsername !== usernameInit
 
     if (nameChanged) {
-      if (newName.length === 0) { toast.error('Name cannot be empty'); return }
-      if (newName.length < 2) { toast.error('Name must be at least 2 characters'); return }
+      if (newName.length === 0) { toast.error(t('nameCannotBeEmpty')); return }
+      if (newName.length < 2) { toast.error(t('nameTooShort')); return }
     }
     if (usernameChanged) {
-      if (newUsername.length === 0) { toast.error('Username cannot be empty'); return }
-      if (newUsername.length < 2) { toast.error('Username must be at least 2 characters'); return }
+      if (newUsername.length === 0) { toast.error(t('usernameCannotBeEmpty')); return }
+      if (newUsername.length < 2) { toast.error(t('usernameTooShort')); return }
       if (!/^[a-z_][a-z0-9_]*$/.test(newUsername)) {
-        toast.error('Username must start with a letter or _ and contain only letters, numbers, and _')
+        toast.error(t('usernameInvalidFormat'))
         return
       }
     }
@@ -89,12 +94,12 @@ export function EditProfileDialog({ open, onClose, user, focusPrice }: Props) {
       }
 
       await Promise.all(tasks)
-      toast.success('Profile saved!')
+      toast.success(t('profileSaved'))
       setSaving(false)
       router.refresh()
       onClose()
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to save.')
+      toast.error(getApiErrorMessage(err))
       setSaving(false)
     }
   }
@@ -108,13 +113,13 @@ export function EditProfileDialog({ open, onClose, user, focusPrice }: Props) {
   }
 
   return (
-    <Dialog open={open} onClose={handleClose} title="Edit profile">
+    <Dialog open={open} onClose={handleClose} title={t('title')}>
       <form onSubmit={handleSubmit} className="space-y-4">
 
         {/* Display name */}
         <div>
           <label htmlFor="ep-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            Display name
+            {t('displayName')}
           </label>
           <div className="relative">
             <User size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
@@ -125,7 +130,7 @@ export function EditProfileDialog({ open, onClose, user, focusPrice }: Props) {
               onChange={e => setDisplayName(e.target.value)}
               minLength={2}
               maxLength={30}
-              placeholder="Your display name"
+              placeholder={t('displayName')}
               className="w-full pl-9 pr-4 py-2.5 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition"
             />
           </div>
@@ -134,7 +139,7 @@ export function EditProfileDialog({ open, onClose, user, focusPrice }: Props) {
         {/* Username */}
         <div>
           <label htmlFor="ep-username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            Username
+            {t('username')}
           </label>
           <div className="relative">
             <AtSign size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
@@ -151,7 +156,7 @@ export function EditProfileDialog({ open, onClose, user, focusPrice }: Props) {
             />
           </div>
           <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
-            2–20 chars · start with a letter or _ · letters, numbers, _ only
+            {t('usernameHint')}
           </p>
         </div>
 
@@ -160,14 +165,14 @@ export function EditProfileDialog({ open, onClose, user, focusPrice }: Props) {
           <>
             <div>
               <label htmlFor="ep-bio" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                Bio
+                {t('bio')}
               </label>
               <textarea
                 id="ep-bio"
                 value={bio}
                 onChange={e => setBio(e.target.value.slice(0, 200))}
                 rows={3}
-                placeholder="Tell your fans about yourself…"
+                placeholder={t('bioPlaceholder')}
                 className="w-full px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition"
               />
               <p className="text-right text-xs text-gray-400 dark:text-gray-500 mt-1">{bio.length}/200</p>
@@ -175,10 +180,13 @@ export function EditProfileDialog({ open, onClose, user, focusPrice }: Props) {
 
             <div>
               <label htmlFor="ep-price" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                Min price per message
+                {t('minPricePerMessage')}
               </label>
               <div className="flex items-center gap-2">
-              <div className="flex items-stretch rounded-full border border-gray-200 dark:border-gray-700 overflow-hidden bg-gray-50 dark:bg-gray-800 w-fit focus-within:ring-2 focus-within:ring-violet-500 focus-within:border-transparent transition">
+              <div
+                onClick={() => priceRef.current?.focus()}
+                className="flex items-stretch rounded-full border border-gray-200 dark:border-gray-700 overflow-hidden bg-gray-50 dark:bg-gray-800 w-fit cursor-text focus-within:ring-2 focus-within:ring-violet-500 focus-within:border-transparent transition"
+              >
                 <input
                   ref={priceRef}
                   id="ep-price"
@@ -191,7 +199,7 @@ export function EditProfileDialog({ open, onClose, user, focusPrice }: Props) {
                     if (val === '' || parseInt(val, 10) <= CREATOR_MAX_PRICE / PRICE_STEP) setPriceThousands(val)
                   }}
                   placeholder="50"
-                  className="w-24 px-4 py-2.5 text-sm text-gray-900 dark:text-white bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-24 px-4 py-2.5 text-sm text-gray-900 dark:text-white bg-transparent focus:outline-none focus-visible:shadow-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
                 <span className="flex items-center pr-4 text-sm text-gray-400 dark:text-gray-500 select-none">
                   000 so&apos;m
@@ -203,16 +211,16 @@ export function EditProfileDialog({ open, onClose, user, focusPrice }: Props) {
                   onClick={() => setPriceThousands('')}
                   className="shrink-0 px-3 py-2 rounded-full text-xs font-semibold text-red-500 dark:text-red-400 border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors"
                 >
-                  Remove
+                  {tCommon('remove')}
                 </button>
               )}
               </div>
               <p className="text-xs mt-1.5 text-gray-400 dark:text-gray-500">
                 {priceThousands
-                  ? <span className="text-violet-500 dark:text-violet-400">= {formatPrice(parseInt(priceThousands, 10))} 000 so&apos;m</span>
-                  : 'Leave empty for no minimum'
+                  ? <span className="text-violet-500 dark:text-violet-400">{t('equals', { amount: formatPrice(parseInt(priceThousands, 10)) })}</span>
+                  : t('leaveEmptyForNoMinimum')
                 }
-                {' · '}Max {formatPrice(CREATOR_MAX_PRICE)} so&apos;m
+                {' · '}{t('max', { amount: formatPrice(CREATOR_MAX_PRICE) })}
               </p>
             </div>
           </>
@@ -225,7 +233,7 @@ export function EditProfileDialog({ open, onClose, user, focusPrice }: Props) {
             onClick={handleClose}
             className="flex-1 px-4 py-2.5 rounded-full text-sm font-medium text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           >
-            Cancel
+            {tCommon('cancel')}
           </button>
           <button
             type="submit"
@@ -235,7 +243,7 @@ export function EditProfileDialog({ open, onClose, user, focusPrice }: Props) {
             {saving
               ? <FontAwesomeIcon icon={faCircleNotch} spin style={{ width: 15, height: 15 }} />
               : <Check size={15} />}
-            {saving ? 'Saving…' : 'Save'}
+            {saving ? tCommon('saving') : tCommon('save')}
           </button>
         </div>
 

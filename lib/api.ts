@@ -1,4 +1,5 @@
 import { API_URL, API_PATH_ME, API_PATH_PROFILE, API_PATH_SOCIAL_LINKS } from './constants'
+import { ApiError } from './apiError'
 import type { User } from '@/types/user'
 import type { SocialLink } from '@/types/social-link'
 
@@ -15,12 +16,11 @@ async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({})) as {
-      message?: string
-      errors?: { field: string; message: string }[]
+      code?: string
+      params?: Record<string, string | number>
+      errors?: { field: string; code: string }[]
     }
-    throw new Error(
-      body.errors?.[0]?.message ?? body.message ?? `Request failed with status ${res.status}`
-    )
+    throw new ApiError(body.errors?.[0]?.code ?? body.code ?? 'UNKNOWN_ERROR', body.params)
   }
 
   if (res.status === 204) return undefined as T
@@ -105,6 +105,17 @@ export function markMessageRead(id: string) {
 
 export function payMessage(id: string) {
   return apiFetch<void>(`/messages/${id}/pay`, { method: 'PATCH' })
+}
+
+export function updateMessagePrice(id: string, price: number) {
+  return apiFetch<void>(`/messages/${id}/price`, {
+    method: 'PATCH',
+    body: JSON.stringify({ price }),
+  })
+}
+
+export function deleteMessage(id: string) {
+  return apiFetch<void>(`/messages/${id}`, { method: 'DELETE' })
 }
 
 export function sendMessage(params: {

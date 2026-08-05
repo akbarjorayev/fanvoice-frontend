@@ -7,8 +7,10 @@ import Image from 'next/image'
 import { toast } from 'sonner'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCircleNotch } from '@fortawesome/free-solid-svg-icons'
+import { useTranslations } from 'next-intl'
 import { googleSignIn } from '@/lib/api'
 import { GOOGLE_CLIENT_ID } from '@/lib/constants'
+import { useApiErrorMessage } from '@/lib/i18n/useApiErrorMessage'
 
 interface CodeResponse {
   code: string
@@ -40,6 +42,8 @@ interface GoogleSignInButtonProps {
 }
 
 export function GoogleSignInButton({ disabled, onLoadingChange, onSuccess }: GoogleSignInButtonProps) {
+  const t = useTranslations('auth')
+  const getApiErrorMessage = useApiErrorMessage()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [ready, setReady] = useState(false)
@@ -62,7 +66,7 @@ export function GoogleSignInButton({ disabled, onLoadingChange, onSuccess }: Goo
         if (response.error) {
           setLoadingState(false)
           if (response.error !== 'access_denied') {
-            toast.error('Google sign-in failed. Please try again.')
+            toast.error(t('googleSignInFailed'))
           }
           return
         }
@@ -71,7 +75,7 @@ export function GoogleSignInButton({ disabled, onLoadingChange, onSuccess }: Goo
           onSuccess?.()
           router.push('/dashboard')
         } catch (err) {
-          toast.error(err instanceof Error ? err.message : 'Sign-in failed. Please try again.')
+          toast.error(getApiErrorMessage(err))
           setLoadingState(false)
         }
       },
@@ -121,12 +125,12 @@ export function GoogleSignInButton({ disabled, onLoadingChange, onSuccess }: Goo
           {loading ? (
             <>
               <FontAwesomeIcon icon={faCircleNotch} spin className="shrink-0 text-[#4285F4]" style={{ width: 20, height: 20 }} />
-              <span className="text-gray-500 dark:text-gray-400">Signing you in…</span>
+              <span className="text-gray-500 dark:text-gray-400">{t('signingIn')}</span>
             </>
           ) : (
             <>
               <Image src="/google-g-logo.webp" alt="Google" width={20} height={20} className="shrink-0" />
-              <span>Continue with Google</span>
+              <span>{t('continueWithGoogle')}</span>
             </>
           )}
         </button>

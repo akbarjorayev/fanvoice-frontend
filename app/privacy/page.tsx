@@ -1,12 +1,20 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { getTranslations, getLocale } from 'next-intl/server'
 import { Navbar } from '@/components/landing/Navbar'
 import { Footer } from '@/components/landing/Footer'
 import { SUPPORT_TELEGRAM_URL } from '@/lib/constants'
+import { formatFullDate, type DateNames } from '@/lib/i18n/formatDate'
+import type { Locale } from '@/lib/i18n/config'
 
-export const metadata: Metadata = {
-  title: 'Privacy Policy — FanVoice',
-  description: 'How FanVoice collects, uses, and protects your personal information.',
+const LAST_UPDATED = new Date('2026-07-04')
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('legal')
+  return {
+    title: `${t('privacyTitle')} — FanVoice`,
+    description: t('privacyMetaDescription'),
+  }
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -18,16 +26,26 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
+  const t = await getTranslations('legal')
+  const tDates = await getTranslations('dates')
+  const locale = await getLocale() as Locale
+  const dateNames: DateNames = {
+    monthsShort: tDates.raw('monthsShort'),
+    monthsLong: tDates.raw('monthsLong'),
+    monthsLongGenitive: tDates.raw('monthsLongGenitive'),
+    weekdaysShort: tDates.raw('weekdaysShort'),
+  }
+
   return (
     <>
       <Navbar />
       <main className="min-h-screen bg-white dark:bg-gray-950">
         <div className="max-w-2xl mx-auto px-6 pt-28 pb-16">
           <div className="mb-12">
-            <p className="text-xs font-semibold uppercase tracking-widest text-violet-500 mb-3">Legal</p>
-            <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-3">Privacy Policy</h1>
-            <p className="text-sm text-gray-400">Last updated: July 4, 2026</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-violet-500 mb-3">{t('eyebrow')}</p>
+            <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-3">{t('privacyTitle')}</h1>
+            <p className="text-sm text-gray-400">{t('lastUpdated', { date: formatFullDate(LAST_UPDATED, locale, dateNames) })}</p>
           </div>
 
           <Section title="1. Who We Are">
@@ -155,9 +173,9 @@ export default function PrivacyPage() {
           <div className="pt-6 border-t border-gray-100 dark:border-white/[0.06]">
             <Link
               href="/terms"
-              className="text-sm text-violet-500 hover:underline"
+              className="inline-flex items-center px-4 py-2 rounded-full bg-violet-50 dark:bg-violet-500/10 text-sm font-semibold text-violet-600 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-500/20 transition-colors"
             >
-              Read our Terms of Service →
+              {t('readTerms')}
             </Link>
           </div>
         </div>

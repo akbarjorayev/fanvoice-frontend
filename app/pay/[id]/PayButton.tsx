@@ -3,7 +3,9 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2, ArrowRight, Check } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { payMessage } from '@/lib/api'
+import { useApiErrorMessage } from '@/lib/i18n/useApiErrorMessage'
 
 interface Props {
   messageId: string
@@ -11,6 +13,8 @@ interface Props {
 }
 
 export function PayButton({ messageId, price: _ }: Props) {
+  const t = useTranslations('payPage')
+  const getApiErrorMessage = useApiErrorMessage()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -25,7 +29,7 @@ export function PayButton({ messageId, price: _ }: Props) {
       setSuccess(true)
       setTimeout(() => router.push(`/success/${messageId}`), 450)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Payment failed')
+      setError(getApiErrorMessage(err))
       setLoading(false)
     }
   }
@@ -35,7 +39,7 @@ export function PayButton({ messageId, price: _ }: Props) {
       <button
         onClick={handlePay}
         disabled={loading || success}
-        className={`w-full inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl disabled:cursor-not-allowed text-base font-bold transition-all duration-300 ${
+        className={`w-full inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-full disabled:cursor-not-allowed text-base font-bold transition-all duration-300 ${
           success
             ? 'bg-emerald-500 text-white'
             : 'bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 disabled:opacity-50 text-white dark:text-gray-900'
@@ -44,16 +48,16 @@ export function PayButton({ messageId, price: _ }: Props) {
         {success ? (
           <>
             <Check size={18} className="animate-scale-in" />
-            Paid!
+            {t('paid')}
           </>
         ) : loading ? (
           <>
             <Loader2 size={18} className="animate-spin" />
-            Processing…
+            {t('processing')}
           </>
         ) : (
           <>
-            Confirm & Pay
+            {t('confirmAndPay')}
             <ArrowRight size={18} />
           </>
         )}

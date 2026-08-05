@@ -20,6 +20,7 @@ export interface MessageDetail {
   title: string
   message: string
   price: number
+  creator_earning: number
   created_at: string
   read_at: string | null
   paid_at: string | null
@@ -40,6 +41,7 @@ export interface ReceivedMessage {
   title: string
   message: string
   price: number
+  creator_earning: number
   created_at: string
   read_at: string | null
   fan_name: string

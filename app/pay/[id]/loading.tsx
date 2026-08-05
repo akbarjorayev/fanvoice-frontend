@@ -7,7 +7,7 @@ export default function PayLoading() {
 
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-16 flex flex-col items-center gap-8">
         {/* Icon */}
-        <div className="w-16 h-16 rounded-2xl bg-gray-200 dark:bg-gray-800" />
+        <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-800" />
 
         {/* Title */}
         <div className="space-y-2 w-full max-w-xs text-center">
@@ -40,7 +40,7 @@ export default function PayLoading() {
         <div className="w-full h-40 rounded-3xl bg-violet-200 dark:bg-violet-900/30" />
 
         {/* Pay button */}
-        <div className="w-full h-14 rounded-2xl bg-gray-200 dark:bg-gray-800" />
+        <div className="w-full h-14 rounded-full bg-gray-200 dark:bg-gray-800" />
       </div>
     </div>
   )

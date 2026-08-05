@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, BadgeCheck } from 'lucide-react'
+import { getTranslations } from 'next-intl/server'
 import { getPublicProfile, getMeServer } from '@/lib/api.server'
 import { AppHeader, navBtnClass } from '@/components/ui/AppHeader'
 import { SendMessageForm } from './SendMessageForm'
@@ -14,6 +15,8 @@ interface Props {
 
 export default async function SendMessagePage({ params }: Props) {
   const { username } = await params
+  const t = await getTranslations('sendMessagePage')
+  const tPublicProfile = await getTranslations('publicProfile')
   const [result, meResult] = await Promise.all([
     getPublicProfile(username).catch(() => null),
     getMeServer().catch(() => null),
@@ -33,17 +36,17 @@ export default async function SendMessagePage({ params }: Props) {
         <div className="text-center max-w-sm">
           <div className="text-6xl mb-6">🪞</div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-            Hey, speak to the mirror!
+            {t('mirrorTitle')}
           </h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm mb-8">
-            You can&apos;t send a message to yourself, {displayName}. That&apos;s what diaries are for 😄
+            {t('mirrorDescription', { name: displayName })}
           </p>
           <Link
             href={`/u/${username}`}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition-colors"
           >
             <ArrowLeft size={14} />
-            Back to your profile
+            {t('backToYourProfile')}
           </Link>
         </div>
       </div>
@@ -55,7 +58,7 @@ export default async function SendMessagePage({ params }: Props) {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950">
       <AppHeader
-        left={<Link href={`/u/${username}`} className={navBtnClass}><ArrowLeft size={14} />Back to profile</Link>}
+        left={<Link href={`/u/${username}`} className={navBtnClass}><ArrowLeft size={14} />{t('backToProfile')}</Link>}
         user={meUserInfo}
       />
 
@@ -107,7 +110,7 @@ export default async function SendMessagePage({ params }: Props) {
 
             {minPrice > 0 && (
               <div className="hidden md:block mt-6">
-                <MinPricePill price={minPrice} suffix="per message" />
+                <MinPricePill price={minPrice} suffix={tPublicProfile('perMessage')} />
               </div>
             )}
 
@@ -116,7 +119,7 @@ export default async function SendMessagePage({ params }: Props) {
           {/* Form */}
           <div>
             <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-8">
-              Send a message
+              {t('title')}
             </h1>
             <SendMessageForm
               creatorId={user.id}
